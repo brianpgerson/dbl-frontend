@@ -14,6 +14,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null); // null means show charts
+  const [timeInterval, setTimeInterval] = useState('full'); // 'full', 'month', or 'week'
 
   useEffect(() => {
     // Connect to real backend data
@@ -81,14 +82,32 @@ function App() {
     }
     
     // Only show dates up to the last date with actual data
-    const fullDates = allDates.slice(0, lastValidDateIndex + 1);
+    const lastValidDate = allDates[lastValidDateIndex];
+    
+    // Filter dates based on selected time interval
+    let filteredDates = [];
+    if (timeInterval === 'week') {
+      // Last 7 days
+      const oneWeekAgo = new Date(lastValidDate);
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      filteredDates = allDates.filter(date => new Date(date) >= oneWeekAgo && date <= lastValidDate);
+    } else if (timeInterval === 'month') {
+      // Last 30 days
+      const oneMonthAgo = new Date(lastValidDate);
+      oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
+      filteredDates = allDates.filter(date => new Date(date) >= oneMonthAgo && date <= lastValidDate);
+    } else {
+      // Full season
+      filteredDates = allDates.slice(0, lastValidDateIndex + 1);
+    }
+    
     // Format as M/D without year for display
-    const dates = fullDates.map(date => {
+    const dates = filteredDates.map(date => {
       const parts = date.split('-');
       return `${parseInt(parts[1])}/${parseInt(parts[2])}`;  
     });
     
-    const teams = [...new Set(raceData.map(d => console.log(d) || d.team_name))];
+    const teams = [...new Set(raceData.map(d => d.team_name))];
     
     const datasets = teams.map((team, index) => {
       const teamData = raceData.filter(d => d.team_name === team);
@@ -96,8 +115,23 @@ function App() {
       // Sort by date for accurate calculations
       teamData.sort((a, b) => new Date(a.date) - new Date(b.date));
       
-      let total = 0;
-      const cumulativeData = fullDates.map(date => {
+      // Find the cumulative total at the start of our interval (for partial views)
+      let startTotal = 0;
+      if (timeInterval !== 'full' && filteredDates.length > 0) {
+        const earliestDate = filteredDates[0];
+        const earlierDates = allDates.filter(date => date < earliestDate);
+        
+        // Calculate HR sum up to the start date
+        earlierDates.forEach(date => {
+          const entry = teamData.find(d => d.date === date);
+          if (entry) {
+            startTotal += parseInt(entry.daily_hrs);
+          }
+        });
+      }
+      
+      let total = startTotal;
+      const cumulativeData = filteredDates.map(date => {
         const entry = teamData.find(d => d.date === date);
         if (entry) {
           total += parseInt(entry.daily_hrs);
@@ -138,7 +172,25 @@ function App() {
   };
 
   const prepareBarChartData = () => {
+    // Retro arcade colors - bright neons - MUST match the array in prepareLineChartData
+    const colors = [
+      '#00ff00', // Green (Matrix)
+      '#ff00ff', // Magenta
+      '#00ffff', // Cyan
+      '#ffff00', // Yellow
+      '#ff3333', // Red
+      '#3333ff', // Blue
+      '#ff8800', // Orange
+      '#ffffff'  // White
+    ];
+    
     const teams = [...new Set(raceData.map(d => d.team_name))];
+    
+    // Create a map of team name to color index to maintain consistency with line chart
+    const teamColorMap = {};
+    teams.forEach((team, index) => {
+      teamColorMap[team] = colors[index % colors.length];
+    });
     
     // Get latest totals for each team by summing all daily HRs
     const teamTotals = teams.map(team => {
@@ -161,24 +213,12 @@ function App() {
       }
     }
     
-    // Retro arcade colors - bright neons
-    const colors = [
-      '#00ff00', // Green (Matrix)
-      '#ff00ff', // Magenta
-      '#00ffff', // Cyan
-      '#ffff00', // Yellow
-      '#ff3333', // Red
-      '#3333ff', // Blue
-      '#ff8800', // Orange
-      '#ffffff'  // White
-    ];
-    
     return {
       labels: sortedTeams,
       datasets: [{
         label: 'Total Bombs',
         data: sortedTotals,
-        backgroundColor: sortedTeams.map((_, index) => colors[index % colors.length]),
+        backgroundColor: sortedTeams.map(team => teamColorMap[team]),
         borderColor: '#000',
         borderWidth: 2,
         borderRadius: 0, // pixel-perfect rectangles
@@ -218,7 +258,29 @@ function App() {
         ) : (
           <>
             <div className="chart-container">
-              <h3>Chart Race</h3>
+              <div className="chart-header">
+                <h3>Chart Race</h3>
+                <div className="time-interval-selector">
+                  <button 
+                    className={`interval-button ${timeInterval === 'full' ? 'active' : ''}`}
+                    onClick={() => setTimeInterval('full')}
+                  >
+                    Full Season
+                  </button>
+                  <button 
+                    className={`interval-button ${timeInterval === 'month' ? 'active' : ''}`}
+                    onClick={() => setTimeInterval('month')}
+                  >
+                    Last Month
+                  </button>
+                  <button 
+                    className={`interval-button ${timeInterval === 'week' ? 'active' : ''}`}
+                    onClick={() => setTimeInterval('week')}
+                  >
+                    Last Week
+                  </button>
+                </div>
+              </div>
               <Line data={prepareLineChartData()} options={{
                 responsive: true,
                 maintainAspectRatio: true,
