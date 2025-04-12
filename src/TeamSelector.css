@@ -2,7 +2,7 @@
   position: fixed;
   top: 15%;
   right: 2%;
-  width: 14%;
+  width: 16%;
   min-width: 150px;
   background: rgba(17, 17, 17, 0.85);
   border: 2px solid #19b8ff;
@@ -37,11 +37,11 @@
   .team-selector ul {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-around;
+    justify-content: space-between;
   }
   
   .team-selector li {
-    font-size: 0.6rem;
+    font-size: 0.5rem;
     padding: 4px;
     margin: 2px;
     border-left: none;

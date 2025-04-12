@@ -76,10 +76,16 @@ const TeamRoster = ({ team }) => {
   if (loading) return <div className="team-roster-loading">Loading roster data...</div>;
   if (error) return <div className="team-roster-error">{error}</div>;
   
+  // Calculate total home runs for the team
+  const totalHomeRuns = roster.reduce((total, player) => {
+    return total + (parseInt(player.hr_count) || 0);
+  }, 0);
+  
   return (
     <div className="team-roster">
       <h3>{team.name}</h3>
       <div className="team-roster-manager">Manager: {team.manager_name}</div>
+      <div className="team-total-hrs">Total Dongs: <span className="hrs-count">{totalHomeRuns}</span></div>
       
       <table className="roster-table">
         <thead>

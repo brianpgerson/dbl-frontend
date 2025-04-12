@@ -5,6 +5,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import './App.css';
 import TeamSelector from './components/TeamSelector';
 import TeamRoster from './components/TeamRoster';
+import HomeRunVideos from './components/HomeRunVideos';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
@@ -25,10 +26,6 @@ function App() {
       })
       .catch(error => {
         console.error('Error fetching race data:', error);
-        setLoading(false);
-        // Fall back to mock data on error
-        const mockData = generateMockData();
-        setRaceData(mockData);
       });
   }, []);
   
@@ -42,32 +39,6 @@ function App() {
         console.error('Error fetching teams:', error);
       });
   }, []);
-
-  const generateMockData = () => {
-    const teams = ['Binger Bongs', 'Dinger Dongs', 'Homer Homies', 'Blast Bros', 'Yard Yarders', 'Fence Swingers', 'Moon Shots', 'Tater Tots'];
-    const days = 30; // Mock 30 days of data
-    
-    let data = [];
-    let totals = teams.reduce((acc, team) => ({ ...acc, [team]: 0 }), {});
-    
-    for (let day = 1; day <= days; day++) {
-      const date = new Date(2025, 2, day).toISOString().split('T')[0]; // March 2025
-      
-      teams.forEach(team => {
-        const dailyHRs = Math.floor(Math.random() * 3); // 0-2 HRs per day
-        totals[team] += dailyHRs;
-        
-        data.push({
-          team_name: team,
-          date,
-          daily_hrs: dailyHRs,
-          total_hrs: totals[team]
-        });
-      });
-    }
-    
-    return data;
-  };
 
   const prepareLineChartData = () => {
     const allDates = [...new Set(raceData.map(d => d.date))].sort();
@@ -107,10 +78,14 @@ function App() {
       return `${parseInt(parts[1])}/${parseInt(parts[2])}`;  
     });
     
-    const teams = [...new Set(raceData.map(d => d.team_name))];
+    const teamNames = [...new Set(raceData.map(d => d.team_name))];
     
-    const datasets = teams.map((team, index) => {
-      const teamData = raceData.filter(d => d.team_name === team);
+    const datasets = teamNames.map((teamName, index) => {
+      const teamData = raceData.filter(d => d.team_name === teamName);
+      
+      // Find the matching team object with manager name
+      const teamObj = teams.find(t => t.name === teamName);
+      const managerName = teamObj ? teamObj.manager_name : '';
       
       // Sort by date for accurate calculations
       teamData.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -153,12 +128,12 @@ function App() {
       ];
       
       return {
-        label: "-" + team.split("'")[0], // Add spaces before team name for legend spacing
+        label: `${managerName ? `${managerName}'s ` : ' '}${teamName}`,
         data: cumulativeData,
         borderColor: colors[index % colors.length],
         backgroundColor: colors[index % colors.length] + '10',
-        borderWidth: 3,
-        pointRadius: 5,
+        borderWidth: 1,
+        pointRadius: 2,
         pointStyle: 'circle',
         pointBackgroundColor: colors[index % colors.length],
         tension: 0.1 // very slight curve
@@ -184,45 +159,52 @@ function App() {
       '#ffffff'  // White
     ];
     
-    const teams = [...new Set(raceData.map(d => d.team_name))];
+    const teamNames = [...new Set(raceData.map(d => d.team_name))];
     
     // Create a map of team name to color index to maintain consistency with line chart
     const teamColorMap = {};
-    teams.forEach((team, index) => {
-      teamColorMap[team] = colors[index % colors.length];
+    teamNames.forEach((teamName, index) => {
+      teamColorMap[teamName] = colors[index % colors.length];
+    });
+    
+    // Create team labels with manager names
+    const teamLabels = teamNames.map(teamName => {
+      const teamObj = teams.find(t => t.name === teamName);
+      const managerName = teamObj ? teamObj.manager_name : '';
+      return `${managerName ? `${managerName}'s ` : ' '}${teamName}`;
     });
     
     // Get latest totals for each team by summing all daily HRs
-    const teamTotals = teams.map(team => {
-      const teamData = raceData.filter(d => d.team_name === team);
+    const teamTotals = teamNames.map(teamName => {
+      const teamData = raceData.filter(d => d.team_name === teamName);
       const total = teamData.reduce((sum, day) => sum + parseInt(day.daily_hrs), 0);
       return total;
     });
     
-    // Sort teams by total HRs descending
-    const sortedTeams = [...teams];
-    const sortedTotals = [...teamTotals];
+    // Get pairs of [label, total, teamName] for sorting
+    const teamDataPairs = teamLabels.map((label, index) => [
+      label, 
+      teamTotals[index],
+      teamNames[index]  // Keep original team name for color mapping
+    ]);
     
-    // Bubble sort for simplicity
-    for (let i = 0; i < sortedTeams.length; i++) {
-      for (let j = 0; j < sortedTeams.length - i - 1; j++) {
-        if (sortedTotals[j] < sortedTotals[j + 1]) {
-          [sortedTotals[j], sortedTotals[j + 1]] = [sortedTotals[j + 1], sortedTotals[j]];
-          [sortedTeams[j], sortedTeams[j + 1]] = [sortedTeams[j + 1], sortedTeams[j]];
-        }
-      }
-    }
+    // Sort teams by total HRs descending
+    teamDataPairs.sort((a, b) => b[1] - a[1]);
+    
+    // Extract sorted labels, totals and team names
+    const sortedLabels = teamDataPairs.map(pair => pair[0]);
+    const sortedTotals = teamDataPairs.map(pair => pair[1]);
+    const sortedTeamNames = teamDataPairs.map(pair => pair[2]);
     
     return {
-      labels: sortedTeams,
+      labels: sortedLabels,
       datasets: [{
-        label: 'Total Bombs',
         data: sortedTotals,
-        backgroundColor: sortedTeams.map(team => teamColorMap[team]),
+        backgroundColor: sortedTeamNames.map(teamName => teamColorMap[teamName]),
         borderColor: '#000',
         borderWidth: 2,
         borderRadius: 0, // pixel-perfect rectangles
-        barThickness: 20 // chunky arcade bars
+        barThickness: 30 // chunky arcade bars
       }]
     };
   };
@@ -299,9 +281,9 @@ function App() {
                       color: '#19b8ff',
                       usePointStyle: true,
                       pointStyle: 'circle',
-                      boxWidth: 10,
-                      boxHeight: 10,
-                      padding: window.innerWidth <= 768 ? 15 : 25,
+                      pointStyleWidth: 4,
+                      boxHeight: 3,
+                      padding: window.innerWidth <= 768 ? 13 : 25,
                       useBorderRadius: true,
                       borderRadius: 1
                     }
@@ -323,7 +305,7 @@ function App() {
             </div>
             
             <div className="chart-container">
-              <h3>Team Totals</h3>
+              <h3 style={ { marginBottom: 50, textAlign: 'left' } }>Team Dong Counts</h3>
               <Bar data={prepareBarChartData()} options={{
                 responsive: true,
                 maintainAspectRatio: true,
@@ -333,12 +315,7 @@ function App() {
                 },
                 plugins: {
                   legend: { 
-                    position: 'top', 
-                    labels: { 
-                      font: { family: "'Press Start 2P', cursive", size: 10 },
-                      color: '#ff3333',
-                      padding: 15
-                    } 
+                    display: false,
                   }
                 },
                 scales: {
@@ -360,6 +337,8 @@ function App() {
                 }
               }} />
             </div>
+            
+            <HomeRunVideos />
           </>
         )}
       </div>

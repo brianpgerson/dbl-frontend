@@ -61,7 +61,7 @@ body {
   left: 0;
   right: 0;
   height: 250px;
-  background: linear-gradient(to top, rgba(255, 41, 151, 0.1) 0%, rgba(255, 0, 204, 0) 100%);
+  background: linear-gradient(to top, rgba(255, 41, 152, 0.21) 0%, rgba(255, 0, 204, 0) 100%);
   pointer-events: none;
   z-index: 9;
 }
@@ -170,7 +170,7 @@ body {
   }
   
   .App {
-    padding-bottom: 140px; /* Space for team selector */  
+    padding-bottom: 220px; /* Space for team selector */  
   }
 }
 

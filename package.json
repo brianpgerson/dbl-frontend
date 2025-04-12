@@ -8,6 +8,7 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.8.4",
+    "bsky-embed": "^0.2.4",
     "chart.js": "^4.4.8",
     "react": "^19.1.0",
     "react-chartjs-2": "^5.3.0",

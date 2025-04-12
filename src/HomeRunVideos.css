@@ -1,0 +1,88 @@
+.home-run-videos {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: rgba(17, 17, 17, 0.85);
+  border: 2px solid #19b8ff;
+  color: #fff;
+  font-family: 'Press Start 2P', cursive;
+  box-shadow: 0 0 20px rgba(41, 121, 255, 0.2);
+  position: relative;
+}
+
+.home-run-videos::before {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  top: -2px;
+  left: -2px;
+  border-top: 4px solid rgba(200, 200, 255, 0.7);
+  border-left: 4px solid rgba(200, 200, 255, 0.7);
+  z-index: 3;
+}
+
+.home-run-videos::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  bottom: -2px;
+  right: -2px;
+  border-bottom: 4px solid rgba(200, 200, 255, 0.7);
+  border-right: 4px solid rgba(200, 200, 255, 0.7);
+  z-index: 3;
+}
+
+.home-run-videos h3 {
+  color: #ff3333;
+  font-size: 1.2rem;
+  margin: 0 0 20px 0;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.videos-container {
+  border: 2px solid #19b8ff;
+  padding: 10px;
+  background: #000;
+  position: relative;
+  border-radius: 0;
+  overflow: hidden; /* Prevent content from breaking outside container */
+}
+
+/* Minimal styling for the bsky-embed web component */
+.videos-container bsky-embed {
+  width: 100%;
+  max-width: 100%;
+  --bsky-embed-bg: #000; /* Match our container background */
+  --bsky-embed-max-width: 100%; /* Ensure full width */
+}
+
+.videos-credit {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.6rem;
+}
+
+.videos-credit a {
+  color: #19b8ff;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.videos-credit a:hover {
+  color: #ff3333;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .home-run-videos {
+    margin: 1rem 0.5rem;
+    padding: 1rem;
+  }
+  
+  .home-run-videos h3 {
+    font-size: 1rem;
+  }
+}
