@@ -220,6 +220,12 @@ body {
   margin-bottom: 15px;
 }
 
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
 .chart-container h3 {
   color: #ff3333;
   text-transform: uppercase;
@@ -255,10 +261,58 @@ body {
   color: #fff;
 }
 
+.zero-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-label {
+  color: #19b8ff;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-label input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #19b8ff;
+  background: #111;
+  cursor: pointer;
+  position: relative;
+}
+
+.toggle-label input[type="checkbox"]:checked {
+  background: #19b8ff;
+}
+
+.toggle-label input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 4px;
+  height: 8px;
+  border: solid #111;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
 @media (max-width: 768px) {
   .chart-header {
     flex-direction: column;
     gap: 10px;
+  }
+  
+  .chart-controls {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
   }
   
   .time-interval-selector {
@@ -269,6 +323,14 @@ body {
   .interval-button {
     font-size: 0.5rem;
     padding: 4px 6px;
+  }
+  
+  .zero-toggle {
+    justify-content: center;
+  }
+  
+  .toggle-label {
+    font-size: 0.5rem;
   }
 }
 

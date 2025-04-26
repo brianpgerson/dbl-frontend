@@ -16,6 +16,7 @@ function App() {
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null); // null means show charts
   const [timeInterval, setTimeInterval] = useState('full'); // 'full', 'month', or 'week'
+  const [showFromZero, setShowFromZero] = useState(false); // toggle for showing chart from zero
 
   useEffect(() => {
     // Connect to real backend data
@@ -92,7 +93,7 @@ function App() {
       
       // Find the cumulative total at the start of our interval (for partial views)
       let startTotal = 0;
-      if (timeInterval !== 'full' && filteredDates.length > 0) {
+      if (timeInterval !== 'full' && filteredDates.length > 0 && !showFromZero) {
         const earliestDate = filteredDates[0];
         const earlierDates = allDates.filter(date => date < earliestDate);
         
@@ -242,25 +243,39 @@ function App() {
             <div className="chart-container">
               <div className="chart-header">
                 <h3>Chart Race</h3>
-                <div className="time-interval-selector">
-                  <button 
-                    className={`interval-button ${timeInterval === 'full' ? 'active' : ''}`}
-                    onClick={() => setTimeInterval('full')}
-                  >
-                    Full Season
-                  </button>
-                  <button 
-                    className={`interval-button ${timeInterval === 'month' ? 'active' : ''}`}
-                    onClick={() => setTimeInterval('month')}
-                  >
-                    Last Month
-                  </button>
-                  <button 
-                    className={`interval-button ${timeInterval === 'week' ? 'active' : ''}`}
-                    onClick={() => setTimeInterval('week')}
-                  >
-                    Last Week
-                  </button>
+                <div className="chart-controls">
+                  <div className="time-interval-selector">
+                    <button 
+                      className={`interval-button ${timeInterval === 'full' ? 'active' : ''}`}
+                      onClick={() => setTimeInterval('full')}
+                    >
+                      Full Season
+                    </button>
+                    <button 
+                      className={`interval-button ${timeInterval === 'month' ? 'active' : ''}`}
+                      onClick={() => setTimeInterval('month')}
+                    >
+                      Last Month
+                    </button>
+                    <button 
+                      className={`interval-button ${timeInterval === 'week' ? 'active' : ''}`}
+                      onClick={() => setTimeInterval('week')}
+                    >
+                      Last Week
+                    </button>
+                  </div>
+                  {timeInterval !== 'full' && (
+                    <div className="zero-toggle">
+                      <label className="toggle-label">
+                        <input 
+                          type="checkbox"
+                          checked={showFromZero}
+                          onChange={(e) => setShowFromZero(e.target.checked)}
+                        />
+                        Period only
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
               <Line data={prepareLineChartData()} options={{
