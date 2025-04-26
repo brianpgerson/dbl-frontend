@@ -38,8 +38,8 @@ const TeamRoster = ({ team }) => {
   const getSortedRoster = () => {
     return [...roster].sort((a, b) => {
       // First, separate bench from active players
-      if (a.status === 'BENCH' && b.status !== 'BENCH') return 1;
-      if (a.status !== 'BENCH' && b.status === 'BENCH') return -1;
+      if (a.roster_status === 'BENCH' && b.roster_status !== 'BENCH') return 1;
+      if (a.roster_status !== 'BENCH' && b.roster_status === 'BENCH') return -1;
       
       // If both are bench or both are active, sort by the selected field
       let valueA, valueB;
@@ -81,6 +81,15 @@ const TeamRoster = ({ team }) => {
     return total + (parseInt(player.hr_count) || 0);
   }, 0);
   
+  const getStatusBadge = (playerStatus) => {
+    if (playerStatus === 'IL') {
+      return <span className="status-badge il-badge">IL</span>;
+    } else if (playerStatus === 'DTD') {
+      return <span className="status-badge dtd-badge">DTD</span>;
+    }
+    return null;
+  };
+
   return (
     <div className="team-roster">
       <h3>{team.name}</h3>
@@ -103,8 +112,10 @@ const TeamRoster = ({ team }) => {
         </thead>
         <tbody>
           {getSortedRoster().map(player => (
-            <tr key={player.player_id} className={player.status === 'BENCH' ? 'bench-player' : ''}>
-              <td>{player.name}</td>
+            <tr key={player.player_id} className={player.roster_status === 'BENCH' ? 'bench-player' : ''}>
+              <td>
+                {player.name} {getStatusBadge(player.player_status)}
+              </td>
               <td>{player.position}</td>
               <td>{player.hr_count}</td>
             </tr>
