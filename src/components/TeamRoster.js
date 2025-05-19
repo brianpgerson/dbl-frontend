@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { supabase } from '../lib/supabase';
 import '../TeamRoster.css';
 
-const TeamRoster = ({ team }) => {
+const TeamRoster = ({ team, canEdit = false }) => {
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortField, setSortField] = useState('hr_count');
-  const [sortDirection, setSortDirection] = useState('desc');
+  const [sortField, setSortField] = useState('position');
+  const [sortDirection, setSortDirection] = useState('asc');
+  
+  // Standard fantasy baseball roster order
+  const positionOrder = {
+    'C': 1,
+    '1B': 2,
+    '2B': 3,
+    'SS': 4,
+    '3B': 5,
+    'LF': 6,
+    'CF': 7,
+    'RF': 8,
+    'DH': 9,
+    'BEN': 10  // Bench players go last
+  };
   
   useEffect(() => {
     setLoading(true);
