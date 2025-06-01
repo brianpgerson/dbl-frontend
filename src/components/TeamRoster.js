@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { supabase } from '../lib/supabase';
 import '../TeamRoster.css';
 
 const TeamRoster = ({ team, canEdit = false }) => {
@@ -59,8 +58,11 @@ const TeamRoster = ({ team, canEdit = false }) => {
       // If both are bench or both are active, sort by the selected field
       let valueA, valueB;
       
-      // Handle numeric fields differently
-      if (sortField === 'hr_count') {
+      if (sortField === 'position') {
+        // Use positionOrder for position sorting
+        valueA = positionOrder[a.position] || 999; // Default high number for unknown positions
+        valueB = positionOrder[b.position] || 999;
+      } else if (sortField === 'hr_count') {
         valueA = parseInt(a[sortField] || 0);
         valueB = parseInt(b[sortField] || 0);
       } else {
