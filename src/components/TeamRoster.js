@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import PlayerSwapModal from './PlayerSwapModal';
 import '../TeamRoster.css';
 
 const TeamRoster = ({ team, canEdit = false }) => {
+  const { canManageTeam, isAuthenticated } = useAuth();
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortField, setSortField] = useState('position');
   const [sortDirection, setSortDirection] = useState('asc');
+  const [showSwapModal, setShowSwapModal] = useState(false);
   
   // Standard fantasy baseball roster order
   const positionOrder = {
@@ -105,11 +108,42 @@ const TeamRoster = ({ team, canEdit = false }) => {
     return null;
   };
 
+  const userCanManage = canManageTeam(team.id);
+
+  const handleSwapSuccess = () => {
+    setShowSwapModal(false);
+    // Reload roster data
+    setLoading(true);
+    axios.get(`${process.env.REACT_APP_API_URL}/api/team/${team.id}/roster-with-hrs`)
+      .then(response => {
+        setRoster(response.data);
+        setLoading(false);
+        setError(null);
+      })
+      .catch(error => {
+        console.error('Error fetching roster:', error);
+        setError('Failed to load roster data');
+        setLoading(false);
+      });
+  };
+
   return (
     <div className="team-roster">
-      <h3>{team.name}</h3>
-      <div className="team-roster-manager">Manager: {team.manager_name}</div>
-      <div className="team-total-hrs">Total Dongs: <span className="hrs-count">{totalHomeRuns}</span></div>
+      <div className="team-roster-header">
+        <div className="team-info">
+          <h3>{team.name}</h3>
+          <div className="team-roster-manager">Manager: {team.manager_name}</div>
+          <div className="team-total-hrs">Total Dongs: <span className="hrs-count">{totalHomeRuns}</span></div>
+        </div>
+        {userCanManage && (
+          <button 
+            className="swap-players-button"
+            onClick={() => setShowSwapModal(true)}
+          >
+            SWAP PLAYERS
+          </button>
+        )}
+      </div>
       
       <table className="roster-table">
         <thead>
@@ -137,6 +171,15 @@ const TeamRoster = ({ team, canEdit = false }) => {
           ))}
         </tbody>
       </table>
+      
+      {showSwapModal && (
+        <PlayerSwapModal
+          team={team}
+          roster={roster}
+          onClose={() => setShowSwapModal(false)}
+          onSuccess={handleSwapSuccess}
+        />
+      )}
     </div>
   );
 };

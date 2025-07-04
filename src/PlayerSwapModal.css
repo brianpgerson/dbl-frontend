@@ -1,0 +1,208 @@
+.swap-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.swap-modal {
+  background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+  border: 3px solid #00ff00;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9);
+  position: relative;
+  overflow: hidden;
+}
+
+.swap-modal::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #00ff00, #00ffff, #ff00ff, #00ff00);
+  border-radius: 8px;
+  z-index: -1;
+  opacity: 0.3;
+}
+
+.swap-modal-header {
+  background: linear-gradient(45deg, #00ff00, #00ffff);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #333;
+}
+
+.swap-modal-header h2 {
+  color: #000;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 14px;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 24px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background: rgba(0, 0, 0, 0.2);
+  transform: scale(1.1);
+}
+
+.swap-form {
+  padding: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  color: #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.form-group select,
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
+  border: 2px solid #333;
+  border-radius: 4px;
+  color: #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+  outline: none;
+  border-color: #00ff00;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+  background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+}
+
+.form-group select:disabled,
+.form-group input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.swap-arrow {
+  text-align: center;
+  font-size: 24px;
+  color: #00ffff;
+  margin: 10px 0;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+  animation: pulse 2s infinite;
+}
+
+.date-help {
+  font-size: 8px;
+  color: #888;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.error-message {
+  background: linear-gradient(45deg, #ff3333, #ff5555);
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 8px;
+  text-align: center;
+  animation: errorPulse 0.5s ease-in-out;
+}
+
+@keyframes errorPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.swap-button {
+  width: 100%;
+  background: linear-gradient(45deg, #ff3333, #ff6666);
+  border: none;
+  color: white;
+  padding: 15px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.swap-button:hover:not(:disabled) {
+  background: linear-gradient(45deg, #ff6666, #ff3333);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 51, 51, 0.4);
+}
+
+.swap-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.swap-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .swap-modal {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .swap-modal-header h2 {
+    font-size: 12px;
+  }
+  
+  .form-group select,
+  .form-group input {
+    font-size: 12px;
+  }
+  
+  .swap-button {
+    font-size: 10px;
+  }
+
+  .date-help {
+    font-size: 7px;
+  }
+}

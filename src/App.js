@@ -6,6 +6,7 @@ import './App.css';
 import TeamSelector from './components/TeamSelector';
 import TeamRoster from './components/TeamRoster';
 import HomeRunVideos from './components/HomeRunVideos';
+import UserIcon from './components/UserIcon';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
@@ -232,8 +233,13 @@ function App() {
       <TeamSelector teams={teams} onSelectTeam={setSelectedTeam} selectedTeam={selectedTeam} />
       <div className="App">
         <header className="App-header">
-          <h1>Dong Bong League</h1>
-          <h2>{new Date().getFullYear()} Season</h2>
+          <div className="header-content">
+            <div className="header-title">
+              <h1>Dong Bong League</h1>
+              <h2>{new Date().getFullYear()} Season</h2>
+            </div>
+            <UserIcon />
+          </div>
         </header>
         
         {selectedTeam ? (
