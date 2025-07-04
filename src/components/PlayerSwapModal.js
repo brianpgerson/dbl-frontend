@@ -5,7 +5,7 @@ import LoginModal from './LoginModal';
 import '../PlayerSwapModal.css';
 
 const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [player1Id, setPlayer1Id] = useState('');
   const [player2Id, setPlayer2Id] = useState('');
   const [reason, setReason] = useState('');
@@ -81,6 +81,9 @@ const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
     return a.position.localeCompare(b.position);
   });
 
+  // Check if user is commissioner (has commissionerLeagues)
+  const isCommissioner = user?.commissionerLeagues?.length > 0;
+
   return (
     <>
       <div className="swap-modal-overlay">
@@ -148,17 +151,19 @@ const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
               />
             </div>
             
-            <div className="form-group">
-              <label htmlFor="effectiveDate">EFFECTIVE DATE (Optional)</label>
-              <input
-                type="date"
-                id="effectiveDate"
-                value={effectiveDate}
-                onChange={(e) => setEffectiveDate(e.target.value)}
-                disabled={loading}
-              />
-              <div className="date-help">Leave blank for automatic date calculation</div>
-            </div>
+            {isCommissioner && (
+              <div className="form-group">
+                <label htmlFor="effectiveDate">EFFECTIVE DATE (Optional)</label>
+                <input
+                  type="date"
+                  id="effectiveDate"
+                  value={effectiveDate}
+                  onChange={(e) => setEffectiveDate(e.target.value)}
+                  disabled={loading}
+                />
+                <div className="date-help">Leave blank for automatic date calculation</div>
+              </div>
+            )}
             
             {error && (
               <div className="error-message">

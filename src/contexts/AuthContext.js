@@ -69,14 +69,17 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const canManageTeam = (teamId) => {
+  const canManageTeam = (teamId, teamLeagueId = null) => {
     // Check if user directly manages this team
     const directlyManages = user?.teams?.some(team => team.id === teamId) || false;
     
-    // Check if user is commissioner (simplified - we'll let the backend do the full league check)
-    const isCommissioner = user?.commissionerLeagues?.length > 0 || false;
+    // Check if user is commissioner for this team's league
+    let isCommissionerForLeague = false;
+    if (teamLeagueId && user?.commissionerLeagues) {
+      isCommissionerForLeague = user.commissionerLeagues.includes(teamLeagueId);
+    }
     
-    return directlyManages || isCommissioner;
+    return directlyManages || isCommissionerForLeague;
   };
 
   const value = {

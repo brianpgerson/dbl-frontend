@@ -94,7 +94,7 @@ const TeamRoster = ({ team, canEdit = false }) => {
     return null;
   };
 
-  const userCanManage = canManageTeam(team.id);
+  const userCanManage = canManageTeam(team.id, team.league_id);
 
   const handleSwapSuccess = () => {
     setShowSwapModal(false);

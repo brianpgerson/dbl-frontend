@@ -1,5 +1,8 @@
 .user-icon-container {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  right: 1.5rem;
+  transform: translateY(-50%);
   z-index: 1000;
 }
 
@@ -102,4 +105,15 @@
   width: 100vw;
   height: 100vh;
   z-index: 999;
+}
+
+@media (max-width: 768px) {
+  .user-icon-container {
+    right: 1rem;
+  }
+  
+  .user-icon-button {
+    font-size: 8px;
+    padding: 6px 10px;
+  }
 }
