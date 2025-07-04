@@ -5,27 +5,13 @@ import PlayerSwapModal from './PlayerSwapModal';
 import '../TeamRoster.css';
 
 const TeamRoster = ({ team, canEdit = false }) => {
-  const { canManageTeam, isAuthenticated } = useAuth();
+  const { canManageTeam } = useAuth();
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortField, setSortField] = useState('position');
   const [sortDirection, setSortDirection] = useState('asc');
   const [showSwapModal, setShowSwapModal] = useState(false);
-  
-  // Standard fantasy baseball roster order
-  const positionOrder = {
-    'C': 1,
-    '1B': 2,
-    '2B': 3,
-    'SS': 4,
-    '3B': 5,
-    'LF': 6,
-    'CF': 7,
-    'RF': 8,
-    'DH': 9,
-    'BEN': 10  // Bench players go last
-  };
   
   useEffect(() => {
     setLoading(true);
