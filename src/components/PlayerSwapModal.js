@@ -4,10 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import LoginModal from './LoginModal';
 import '../PlayerSwapModal.css';
 
-const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
+const PlayerSwapModal = ({ team, roster, selectedPlayer, onClose, onSuccess }) => {
   const { isAuthenticated, user } = useAuth();
-  const [benchPlayerId, setBenchPlayerId] = useState('');
-  const [activatePlayerId, setActivatePlayerId] = useState('');
+  const [destinationPlayerId, setDestinationPlayerId] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,13 +20,13 @@ const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
       return;
     }
 
-    if (!benchPlayerId || !activatePlayerId) {
-      setError('Please select both a player to bench and a player to activate');
+    if (!destinationPlayerId) {
+      setError('Please select a destination for the move');
       return;
     }
 
-    if (benchPlayerId === activatePlayerId) {
-      setError('Please select two different players');
+    if (destinationPlayerId === selectedPlayer.player_id.toString()) {
+      setError('Player cannot move to themselves');
       return;
     }
 
@@ -37,8 +36,8 @@ const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
     try {
       const swapData = {
         teamId: team.id,
-        player1Id: parseInt(benchPlayerId),
-        player2Id: parseInt(activatePlayerId)
+        player1Id: selectedPlayer.player_id,
+        player2Id: parseInt(destinationPlayerId)
       };
 
 
@@ -76,43 +75,53 @@ const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
     return `${formattedName} (${player.position})${statusBadge}`;
   };
 
-  // Get players eligible to be benched
-  const getEligibleToBench = () => {
-    return roster.filter(player => {
-      // Must be currently starting (not on bench)
-      if (player.position === 'BEN') return false;
-      
-      // Case 1: Injured starters
-      if (player.player_status === 'IL') return true;
-      
-      // Case 2: Bench-drafted players currently starting
-      if (player.drafted_position === 'BEN') return true;
-      
-      return false;
-    });
+  // Get valid destination players for the selected player
+  const getValidDestinations = () => {
+    if (!selectedPlayer) return [];
+
+    // If selected player is currently starting
+    if (selectedPlayer.position !== 'BEN') {
+      // Can only move to bench players
+      return roster.filter(player => {
+        if (player.position !== 'BEN') return false;
+        if (player.player_id === selectedPlayer.player_id) return false;
+        
+        // If selected player was bench-drafted, any bench player is valid
+        if (selectedPlayer.drafted_position === 'BEN') return true;
+        
+        // If selected player was position-drafted, only bench players who can play that position
+        if (player.drafted_position === 'BEN') return true; // Bench-drafted can play anywhere
+        if (player.drafted_position === selectedPlayer.position) return true; // Same position
+        
+        return false;
+      });
+    } else {
+      // Selected player is on bench - can move to starting positions
+      return roster.filter(player => {
+        if (player.position === 'BEN') return false;
+        if (player.player_id === selectedPlayer.player_id) return false;
+        
+        // If selected player was bench-drafted, can replace anyone
+        if (selectedPlayer.drafted_position === 'BEN') return true;
+        
+        // If selected player was position-drafted, can only replace players at their position
+        if (selectedPlayer.drafted_position === player.position) return true;
+        
+        return false;
+      });
+    }
   };
 
-  // Get players eligible to be activated
-  const getEligibleToActivate = (benchingPlayer = null) => {
-    return roster.filter(player => {
-      // Must be currently benched
-      if (player.position !== 'BEN') return false;
-      
-      // If no player selected to bench yet, show all benched players
-      if (!benchingPlayer) return true;
-      
-      // Case 1: Bench-drafted players can replace anyone
-      if (player.drafted_position === 'BEN') return true;
-      
-      // Case 2: Position-drafted players can only replace players at their drafted position
-      if (player.drafted_position === benchingPlayer.position) return true;
-      
-      return false;
-    });
+  // Get description of what the move will do
+  const getMoveDescription = () => {
+    if (!selectedPlayer) return '';
+    
+    if (selectedPlayer.position !== 'BEN') {
+      return `Move ${getPlayerDisplay(selectedPlayer)} to bench`;
+    } else {
+      return `Activate ${getPlayerDisplay(selectedPlayer)}`;
+    }
   };
-
-  // Get the selected bench player for filtering activate dropdown
-  const selectedBenchPlayer = roster.find(p => p.player_id === parseInt(benchPlayerId));
 
 
   // Check if user is commissioner (has commissionerLeagues)
@@ -123,7 +132,7 @@ const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
       <div className="swap-modal-overlay">
         <div className="swap-modal">
           <div className="swap-modal-header">
-            <h2>SWAP PLAYERS</h2>
+            <h2>MOVE PLAYER</h2>
             <button 
               className="close-button"
               onClick={onClose}
@@ -134,47 +143,32 @@ const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
           </div>
           
           <form onSubmit={handleSubmit} className="swap-form">
-            <div className="form-group">
-              <label htmlFor="benchPlayer">BENCH THIS PLAYER</label>
-              <select
-                id="benchPlayer"
-                value={benchPlayerId}
-                onChange={(e) => {
-                  setBenchPlayerId(e.target.value);
-                  // Reset activate selection when bench selection changes
-                  setActivatePlayerId('');
-                }}
-                required
-                disabled={loading}
-                title="Select an injured starter or bench-drafted player currently starting"
-              >
-                <option value="">Select player to bench</option>
-                {getEligibleToBench().map(player => (
-                  <option key={player.player_id} value={player.player_id}>
-                    {getPlayerDisplay(player)} {player.player_status === 'IL' ? '[Injured]' : '[Bench-drafted utility]'}
-                  </option>
-                ))}
-              </select>
+            <div className="move-description">
+              {getMoveDescription()}
             </div>
             
-            <div className="swap-arrow">⬇⬆</div>
-            
             <div className="form-group">
-              <label htmlFor="activatePlayer">ACTIVATE THIS PLAYER</label>
+              <label htmlFor="destination">
+                {selectedPlayer?.position !== 'BEN' ? 'SWAP WITH BENCH PLAYER' : 'REPLACE STARTER'}
+              </label>
               <select
-                id="activatePlayer"
-                value={activatePlayerId}
-                onChange={(e) => setActivatePlayerId(e.target.value)}
+                id="destination"
+                value={destinationPlayerId}
+                onChange={(e) => setDestinationPlayerId(e.target.value)}
                 required
-                disabled={loading || !benchPlayerId}
-                title="Select a benched player to activate"
+                disabled={loading}
+                title="Select player to swap positions with"
               >
                 <option value="">
-                  {benchPlayerId ? 'Select player to activate' : 'First select a player to bench'}
+                  {selectedPlayer?.position !== 'BEN' ? 'Select bench player' : 'Select starter to replace'}
                 </option>
-                {getEligibleToActivate(selectedBenchPlayer).map(player => (
+                {getValidDestinations().map(player => (
                   <option key={player.player_id} value={player.player_id}>
-                    {getPlayerDisplay(player)} {player.drafted_position === 'BEN' ? '[Can play any position]' : `[Can only play ${player.drafted_position}]`}
+                    {getPlayerDisplay(player)}
+                    {selectedPlayer?.position !== 'BEN' 
+                      ? (player.drafted_position === 'BEN' ? ' [Can play any position]' : ` [Drafted ${player.drafted_position}]`)
+                      : (player.player_status === 'IL' ? ' [Injured]' : ' [Active]')
+                    }
                   </option>
                 ))}
               </select>
@@ -204,9 +198,9 @@ const PlayerSwapModal = ({ team, roster, onClose, onSuccess }) => {
             <button 
               type="submit" 
               className="swap-button"
-              disabled={loading || !benchPlayerId || !activatePlayerId}
+              disabled={loading || !destinationPlayerId}
             >
-              {loading ? 'SWAPPING...' : 'EXECUTE SWAP'}
+              {loading ? 'MOVING...' : 'EXECUTE MOVE'}
             </button>
           </form>
         </div>

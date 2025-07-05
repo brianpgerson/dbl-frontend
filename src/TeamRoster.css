@@ -101,6 +101,11 @@
   overflow: hidden;
 }
 
+.roster-table th:nth-child(1),
+.roster-table td:nth-child(1) {
+  text-align: left;
+}
+
 .roster-table th:nth-child(1) {
   width: 30%; /* Player column */
 }
