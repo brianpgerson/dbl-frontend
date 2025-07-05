@@ -232,13 +232,11 @@ function App() {
       <div className="pink-glow"></div>
       <TeamSelector teams={teams} onSelectTeam={setSelectedTeam} selectedTeam={selectedTeam} />
       <div className="App">
+        <UserIcon />
         <header className="App-header">
           <div className="header-content">
-            <div className="header-title">
-              <h1>Dong Bong League</h1>
-              <h2>{new Date().getFullYear()} Season</h2>
-            </div>
-            <UserIcon />
+            <h1>Dong Bong League</h1>
+            <h2>{new Date().getFullYear()} Season</h2>
           </div>
         </header>
         

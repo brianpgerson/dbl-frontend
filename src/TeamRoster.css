@@ -82,13 +82,28 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.8rem;
+  table-layout: fixed;
 }
 
 .roster-table th {
-  padding: 10px;
+  padding: 10px 8px;
   color: #ff3333;
   text-align: left;
   border-bottom: 2px solid #19b8ff;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.roster-table th:nth-child(1) {
+  width: 60%; /* Player column - wider for names + badges */
+}
+
+.roster-table th:nth-child(2) {
+  width: 20%; /* Position column */
+}
+
+.roster-table th:nth-child(3) {
+  width: 20%; /* HR column */
 }
 
 .sortable-header {
@@ -102,8 +117,11 @@
 }
 
 .roster-table td {
-  padding: 10px;
+  padding: 10px 8px;
   border-bottom: 1px solid rgba(25, 184, 255, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .roster-table tr:last-child td {
@@ -150,7 +168,19 @@
   
   .roster-table th,
   .roster-table td {
-    padding: 8px 5px;
+    padding: 8px 4px;
+  }
+
+  .roster-table th:nth-child(1) {
+    width: 55%; /* Slightly smaller on mobile */
+  }
+
+  .roster-table th:nth-child(2) {
+    width: 25%; /* Bit wider for "Pos" */
+  }
+
+  .roster-table th:nth-child(3) {
+    width: 20%; /* HR column stays same */
   }
 
   .swap-players-button {

@@ -1,7 +1,7 @@
 .user-icon-container {
   position: absolute;
-  top: 50%;
   right: 1.5rem;
+  top: 2.5em;
   transform: translateY(-50%);
   z-index: 1000;
 }
@@ -109,7 +109,7 @@
 
 @media (max-width: 768px) {
   .user-icon-container {
-    right: 1rem;
+    right: 0.5rem;
   }
   
   .user-icon-button {

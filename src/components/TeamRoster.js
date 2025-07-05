@@ -13,6 +13,20 @@ const TeamRoster = ({ team, canEdit = false }) => {
   const [sortDirection, setSortDirection] = useState('asc');
   const [showSwapModal, setShowSwapModal] = useState(false);
   
+  // Standard fantasy baseball roster order
+  const positionOrder = {
+    'C': 1,
+    '1B': 2,
+    '2B': 3,
+    'SS': 4,
+    '3B': 5,
+    'LF': 6,
+    'CF': 7,
+    'RF': 8,
+    'DH': 9,
+    'BEN': 10  // Bench players go last
+  };
+  
   useEffect(() => {
     setLoading(true);
     axios.get(`${process.env.REACT_APP_API_URL}/api/team/${team.id}/roster-with-hrs`)
@@ -48,8 +62,12 @@ const TeamRoster = ({ team, canEdit = false }) => {
       // If both are bench or both are active, sort by the selected field
       let valueA, valueB;
       
-      // Handle numeric fields differently
-      if (sortField === 'hr_count') {
+      // Handle different field types
+      if (sortField === 'position') {
+        // Use positionOrder for position sorting
+        valueA = positionOrder[a.position] || 999; // Default high number for unknown positions
+        valueB = positionOrder[b.position] || 999;
+      } else if (sortField === 'hr_count') {
         valueA = parseInt(a[sortField] || 0);
         valueB = parseInt(b[sortField] || 0);
       } else {
@@ -138,7 +156,7 @@ const TeamRoster = ({ team, canEdit = false }) => {
               Player {getSortIcon('name')}
             </th>
             <th onClick={() => handleSort('position')} className="sortable-header">
-              Position {getSortIcon('position')}
+              Pos {getSortIcon('position')}
             </th>
             <th onClick={() => handleSort('hr_count')} className="sortable-header">
               HR {getSortIcon('hr_count')}
