@@ -11,7 +11,8 @@ const TeamRoster = ({ team, canEdit = false }) => {
   const [error, setError] = useState(null);
   const [sortField, setSortField] = useState('position');
   const [sortDirection, setSortDirection] = useState('asc');
-  const [showSwapModal, setShowSwapModal] = useState(false);
+  const [showMoveModal, setShowMoveModal] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
   
   // Standard fantasy baseball roster order
   const positionOrder = {
@@ -112,10 +113,39 @@ const TeamRoster = ({ team, canEdit = false }) => {
     return null;
   };
 
+  // Format player name as F. LastName
+  const formatPlayerName = (fullName) => {
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastNameParts = nameParts.slice(1);
+    return `${firstName[0]}. ${lastNameParts.join(' ')}`;
+  };
+
+  // Check if player is eligible to be moved
+  const isPlayerEligible = (player) => {
+    // Case 1: Injured starters
+    if (player.position !== 'BEN' && player.player_status === 'IL') return true;
+    
+    // Case 2: Bench-drafted players currently starting  
+    if (player.position !== 'BEN' && player.drafted_position === 'BEN') return true;
+    
+    // Case 3: Any benched player can be activated
+    if (player.position === 'BEN') return true;
+    
+    return false;
+  };
+
+  // Handle move button click
+  const handleMoveClick = (player) => {
+    setSelectedPlayer(player);
+    setShowMoveModal(true);
+  };
+
   const userCanManage = canManageTeam(team.id, team.league_id);
 
-  const handleSwapSuccess = () => {
-    setShowSwapModal(false);
+  const handleMoveSuccess = () => {
+    setShowMoveModal(false);
+    setSelectedPlayer(null);
     // Reload roster data
     setLoading(true);
     axios.get(`${process.env.REACT_APP_API_URL}/api/team/${team.id}/roster-with-hrs`)
@@ -139,49 +169,63 @@ const TeamRoster = ({ team, canEdit = false }) => {
           <div className="team-roster-manager">Manager: {team.manager_name}</div>
           <div className="team-total-hrs">Total Dongs: <span className="hrs-count">{totalHomeRuns}</span></div>
         </div>
-        {userCanManage && (
-          <button 
-            className="swap-players-button"
-            onClick={() => setShowSwapModal(true)}
-          >
-            SWAP PLAYERS
-          </button>
-        )}
       </div>
       
-      <table className="roster-table">
-        <thead>
-          <tr>
-            <th onClick={() => handleSort('name')} className="sortable-header">
-              Player {getSortIcon('name')}
-            </th>
-            <th onClick={() => handleSort('position')} className="sortable-header">
-              Pos {getSortIcon('position')}
-            </th>
-            <th onClick={() => handleSort('hr_count')} className="sortable-header">
-              HR {getSortIcon('hr_count')}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {getSortedRoster().map(player => (
-            <tr key={player.player_id} className={player.roster_status === 'BENCH' ? 'bench-player' : ''}>
-              <td>
-                {player.name} {getStatusBadge(player.player_status)}
-              </td>
-              <td>{player.position}</td>
-              <td>{player.hr_count}</td>
+      <div className="roster-table-container">
+        <table className="roster-table">
+          <thead>
+            <tr>
+              <th onClick={() => handleSort('name')} className="sortable-header">
+                Player {getSortIcon('name')}
+              </th>
+              <th onClick={() => handleSort('position')} className="sortable-header">
+                Pos {getSortIcon('position')}
+              </th>
+              <th>Action</th>
+              <th onClick={() => handleSort('hr_count')} className="sortable-header">
+                HR {getSortIcon('hr_count')}
+              </th>
+              <th>Today</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {getSortedRoster().map(player => (
+              <tr key={player.player_id} className={player.roster_status === 'BENCH' ? 'bench-player' : ''}>
+                <td>
+                  {formatPlayerName(player.name)} {getStatusBadge(player.player_status)}
+                </td>
+                <td>{player.position}</td>
+                <td>
+                  {userCanManage && isPlayerEligible(player) && (
+                    <button 
+                      className="move-button"
+                      onClick={() => handleMoveClick(player)}
+                      title={`Move ${formatPlayerName(player.name)}`}
+                    >
+                      MOVE
+                    </button>
+                  )}
+                </td>
+                <td>{player.hr_count}</td>
+                <td className="game-status">
+                  <span className="game-placeholder">@LAD 7:10</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       
-      {showSwapModal && (
+      {showMoveModal && selectedPlayer && (
         <PlayerSwapModal
           team={team}
           roster={roster}
-          onClose={() => setShowSwapModal(false)}
-          onSuccess={handleSwapSuccess}
+          selectedPlayer={selectedPlayer}
+          onClose={() => {
+            setShowMoveModal(false);
+            setSelectedPlayer(null);
+          }}
+          onSuccess={handleMoveSuccess}
         />
       )}
     </div>
