@@ -79,17 +79,6 @@ export const AuthProvider = ({ children }) => {
       isCommissionerForLeague = user.commissionerLeagues.includes(teamLeagueId);
     }
     
-    // Debug logging
-    console.log('canManageTeam debug:', {
-      teamId,
-      teamLeagueId,
-      directlyManages,
-      isCommissionerForLeague,
-      userCommissionerLeagues: user?.commissionerLeagues,
-      userTeams: user?.teams,
-      result: directlyManages || isCommissionerForLeague
-    });
-    
     return directlyManages || isCommissionerForLeague;
   };
 

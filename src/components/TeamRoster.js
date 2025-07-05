@@ -5,7 +5,7 @@ import PlayerSwapModal from './PlayerSwapModal';
 import '../TeamRoster.css';
 
 const TeamRoster = ({ team, canEdit = false }) => {
-  const { canManageTeam, user } = useAuth();
+  const { canManageTeam } = useAuth();
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -106,14 +106,6 @@ const TeamRoster = ({ team, canEdit = false }) => {
   };
 
   const userCanManage = canManageTeam(team.id, team.league_id);
-  
-  // Debug commissioner access
-  console.log('Debug commissioner access:', {
-    teamId: team.id,
-    teamLeagueId: team.league_id,
-    user: user,
-    canManage: userCanManage
-  });
 
   const handleMoveSuccess = () => {
     setShowMoveModal(false);

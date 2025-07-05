@@ -81,34 +81,18 @@ const PlayerSwapModal = ({ team, roster, selectedPlayer, onClose, onSuccess }) =
 
     // If selected player is currently starting
     if (selectedPlayer.position !== 'BEN') {
-      // Can only move to bench players
-      return roster.filter(player => {
-        if (player.position !== 'BEN') return false;
-        if (player.player_id === selectedPlayer.player_id) return false;
-        
-        // If selected player was bench-drafted, any bench player is valid
-        if (selectedPlayer.drafted_position === 'BEN') return true;
-        
-        // If selected player was position-drafted, only bench players who can play that position
-        if (player.drafted_position === 'BEN') return true; // Bench-drafted can play anywhere
-        if (player.drafted_position === selectedPlayer.position) return true; // Same position
-        
-        return false;
-      });
+      return roster.filter(player => 
+        (player.position === 'BEN') &&  (player.player_id !== selectedPlayer.player_id) && 
+        (['BEN', selectedPlayer.position].includes(player.drafted_position)) &&
+        (player.game_status !== 'live' && player.game_status !== 'final')
+      );
     } else {
       // Selected player is on bench - can move to starting positions
-      return roster.filter(player => {
-        if (player.position === 'BEN') return false;
-        if (player.player_id === selectedPlayer.player_id) return false;
-        
-        // If selected player was bench-drafted, can replace anyone
-        if (selectedPlayer.drafted_position === 'BEN') return true;
-        
-        // If selected player was position-drafted, can only replace players at their position
-        if (selectedPlayer.drafted_position === player.position) return true;
-        
-        return false;
-      });
+      return roster.filter(player => (player.position !== 'BEN') && 
+        (player.player_id !== selectedPlayer.player_id) &&
+        (player.game_status !== 'live' && player.game_status !== 'final') &&
+        (selectedPlayer.drafted_position === 'BEN' || selectedPlayer.drafted_position === player.position)
+      );
     }
   };
 
