@@ -5,12 +5,10 @@ import PlayerSwapModal from './PlayerSwapModal';
 import '../TeamRoster.css';
 
 const TeamRoster = ({ team, canEdit = false }) => {
-  const { canManageTeam } = useAuth();
+  const { canManageTeam, user } = useAuth();
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortField, setSortField] = useState('position');
-  const [sortDirection, setSortDirection] = useState('asc');
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   
@@ -43,57 +41,18 @@ const TeamRoster = ({ team, canEdit = false }) => {
       });
   }, [team.id]);
   
-  const handleSort = (field) => {
-    // If clicking the same field, toggle direction
-    if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      // New field, set it with default ascending order
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-  
   const getSortedRoster = () => {
     return [...roster].sort((a, b) => {
       // First, separate bench from active players
       if (a.roster_status === 'BENCH' && b.roster_status !== 'BENCH') return 1;
       if (a.roster_status !== 'BENCH' && b.roster_status === 'BENCH') return -1;
       
-      // If both are bench or both are active, sort by the selected field
-      let valueA, valueB;
+      // Sort by position order
+      const valueA = positionOrder[a.position] || 999;
+      const valueB = positionOrder[b.position] || 999;
       
-      // Handle different field types
-      if (sortField === 'position') {
-        // Use positionOrder for position sorting
-        valueA = positionOrder[a.position] || 999; // Default high number for unknown positions
-        valueB = positionOrder[b.position] || 999;
-      } else if (sortField === 'hr_count') {
-        valueA = parseInt(a[sortField] || 0);
-        valueB = parseInt(b[sortField] || 0);
-      } else {
-        valueA = a[sortField] || '';
-        valueB = b[sortField] || '';
-        
-        // Case insensitive string comparison
-        if (typeof valueA === 'string' && typeof valueB === 'string') {
-          valueA = valueA.toLowerCase();
-          valueB = valueB.toLowerCase();
-        }
-      }
-      
-      // Determine sort order
-      if (valueA === valueB) return 0;
-      
-      const comparison = valueA > valueB ? 1 : -1;
-      return sortDirection === 'asc' ? comparison : -comparison;
+      return valueA - valueB;
     });
-  };
-  
-  // Get the current sort icon
-  const getSortIcon = (field) => {
-    if (field !== sortField) return '⇅';
-    return sortDirection === 'asc' ? '↑' : '↓';
   };
   
   if (loading) return <div className="team-roster-loading">Loading roster data...</div>;
@@ -113,16 +72,21 @@ const TeamRoster = ({ team, canEdit = false }) => {
     return null;
   };
 
-  // Format player name as F. LastName
-  const formatPlayerName = (fullName) => {
+  // Format player name as F. LastName (drafted pos)
+  const formatPlayerName = (fullName, draftedPosition) => {
     const nameParts = fullName.trim().split(' ');
     const firstName = nameParts[0];
     const lastNameParts = nameParts.slice(1);
-    return `${firstName[0]}. ${lastNameParts.join(' ')}`;
+    return `${firstName[0]}. ${lastNameParts.join(' ')} (${draftedPosition})`;
   };
 
   // Check if player is eligible to be moved
   const isPlayerEligible = (player) => {
+    // Don't allow moves if player's game is live or final today
+    if (player.game_status === 'live' || player.game_status === 'final') {
+      return false;
+    }
+    
     // Case 1: Injured starters
     if (player.position !== 'BEN' && player.player_status === 'IL') return true;
     
@@ -142,6 +106,14 @@ const TeamRoster = ({ team, canEdit = false }) => {
   };
 
   const userCanManage = canManageTeam(team.id, team.league_id);
+  
+  // Debug commissioner access
+  console.log('Debug commissioner access:', {
+    teamId: team.id,
+    teamLeagueId: team.league_id,
+    user: user,
+    canManage: userCanManage
+  });
 
   const handleMoveSuccess = () => {
     setShowMoveModal(false);
@@ -175,32 +147,26 @@ const TeamRoster = ({ team, canEdit = false }) => {
         <table className="roster-table">
           <thead>
             <tr>
-              <th onClick={() => handleSort('name')} className="sortable-header">
-                Player {getSortIcon('name')}
-              </th>
-              <th onClick={() => handleSort('position')} className="sortable-header">
-                Pos {getSortIcon('position')}
-              </th>
+              <th>Pos</th>
+              <th>Player</th>
               <th>Action</th>
-              <th onClick={() => handleSort('hr_count')} className="sortable-header">
-                HR {getSortIcon('hr_count')}
-              </th>
+              <th>HR</th>
               <th>Today</th>
             </tr>
           </thead>
           <tbody>
             {getSortedRoster().map(player => (
               <tr key={player.player_id} className={player.roster_status === 'BENCH' ? 'bench-player' : ''}>
-                <td>
-                  {formatPlayerName(player.name)} {getStatusBadge(player.player_status)}
-                </td>
                 <td>{player.position}</td>
+                <td>
+                  {formatPlayerName(player.name, player.drafted_position)} {getStatusBadge(player.player_status)}
+                </td>
                 <td>
                   {userCanManage && isPlayerEligible(player) && (
                     <button 
                       className="move-button"
                       onClick={() => handleMoveClick(player)}
-                      title={`Move ${formatPlayerName(player.name)}`}
+                      title={`Move ${formatPlayerName(player.name, player.drafted_position)}`}
                     >
                       MOVE
                     </button>
@@ -208,7 +174,9 @@ const TeamRoster = ({ team, canEdit = false }) => {
                 </td>
                 <td>{player.hr_count}</td>
                 <td className="game-status">
-                  <span className="game-placeholder">@LAD 7:10</span>
+                  <span className={`game-info game-${player.game_status || 'none'}`}>
+                    {player.game_info}
+                  </span>
                 </td>
               </tr>
             ))}

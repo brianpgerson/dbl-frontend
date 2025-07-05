@@ -101,17 +101,17 @@
   overflow: hidden;
 }
 
-.roster-table th:nth-child(1),
-.roster-table td:nth-child(1) {
+.roster-table th,
+.roster-table td {
   text-align: left;
 }
 
 .roster-table th:nth-child(1) {
-  width: 30%; /* Player column */
+  width: 10%; /* Position column */
 }
 
 .roster-table th:nth-child(2) {
-  width: 10%; /* Position column */
+  width: 30%; /* Player column */
 }
 
 .roster-table th:nth-child(3) {
@@ -126,15 +126,6 @@
   width: 35%; /* Game status column */
 }
 
-.sortable-header {
-  cursor: pointer;
-  user-select: none;
-  position: relative;
-}
-
-.sortable-header:hover {
-  background-color: rgba(255, 51, 51, 0.1);
-}
 
 .roster-table td {
   padding: 10px 8px;
@@ -196,11 +187,11 @@
   }
 
   .roster-table th:nth-child(1) {
-    width: 25%; /* Player name */
+    width: 8%; /* Position */
   }
 
   .roster-table th:nth-child(2) {
-    width: 8%; /* Position */
+    width: 25%; /* Player name */
   }
 
   .roster-table th:nth-child(3) {
@@ -275,11 +266,41 @@
 /* Game status styling */
 .game-status {
   font-size: 0.7rem;
-  color: #888;
   font-family: 'Press Start 2P', cursive;
 }
 
-.game-placeholder {
+.game-info {
   color: #19b8ff;
-  opacity: 0.7;
+  opacity: 0.8;
+}
+
+/* Game status specific styling */
+.game-info.game-none {
+  color: #666;
+  opacity: 0.5;
+}
+
+.game-info.game-scheduled {
+  color: #19b8ff;
+  opacity: 0.8;
+}
+
+.game-info.game-live {
+  color: #00ff00;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.game-info.game-final {
+  color: #ff6600;
+}
+
+.game-info.game-postponed,
+.game-info.game-delayed {
+  color: #ffcc00;
+}
+
+.game-info.game-other {
+  color: #19b8ff;
+  opacity: 0.6;
 }
