@@ -1,0 +1,173 @@
+.admin-portal {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: rgba(17, 17, 17, 0.85);
+  border: 2px solid #ff3333;
+  color: #fff;
+  font-family: 'Press Start 2P', cursive;
+  box-shadow: 0 0 20px rgba(255, 51, 51, 0.2);
+}
+
+.admin-portal h2 {
+  color: #ff3333;
+  font-size: 1.2rem;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.admin-portal h3 {
+  color: #19b8ff;
+  font-size: 0.9rem;
+  margin: 20px 0 10px;
+}
+
+.admin-portal h4 {
+  color: #00ff00;
+  font-size: 0.75rem;
+  margin: 15px 0 10px;
+}
+
+.admin-loading {
+  text-align: center;
+  padding: 50px;
+  color: #19b8ff;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+}
+
+.admin-message {
+  background: rgba(0, 255, 0, 0.15);
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  padding: 10px;
+  margin-bottom: 15px;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.admin-tabs button {
+  background: #111;
+  color: #19b8ff;
+  border: 2px solid #19b8ff;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-tabs button:hover {
+  background: rgba(25, 184, 255, 0.15);
+}
+
+.admin-tabs button.active {
+  background: rgba(25, 184, 255, 0.25);
+  box-shadow: 0 0 10px rgba(25, 184, 255, 0.5);
+  color: #fff;
+}
+
+.admin-hint {
+  font-size: 0.6rem;
+  color: #888;
+  margin-bottom: 15px;
+  line-height: 1.8;
+}
+
+.admin-form {
+  margin-top: 10px;
+}
+
+.form-row {
+  margin-bottom: 15px;
+}
+
+.form-row label {
+  display: block;
+  color: #19b8ff;
+  font-size: 0.6rem;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.form-row input,
+.form-row select {
+  width: 100%;
+  padding: 10px;
+  background: #0a0a0a;
+  border: 2px solid #333;
+  color: #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.65rem;
+  box-sizing: border-box;
+}
+
+.form-row input:focus,
+.form-row select:focus {
+  outline: none;
+  border-color: #19b8ff;
+  box-shadow: 0 0 5px rgba(25, 184, 255, 0.3);
+}
+
+.admin-submit {
+  background: linear-gradient(45deg, #ff3333, #ff6666);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+}
+
+.admin-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 51, 51, 0.4);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.65rem;
+  margin-bottom: 20px;
+}
+
+.admin-table th {
+  padding: 8px;
+  color: #ff3333;
+  text-align: left;
+  border-bottom: 2px solid #19b8ff;
+}
+
+.admin-table td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(25, 184, 255, 0.3);
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+@media (max-width: 768px) {
+  .admin-portal {
+    margin: 1rem 0.5rem;
+    padding: 1rem;
+  }
+
+  .admin-tabs button {
+    font-size: 0.5rem;
+    padding: 6px 10px;
+  }
+
+  .admin-table {
+    font-size: 0.55rem;
+  }
+}

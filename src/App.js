@@ -9,6 +9,8 @@ import TeamRoster from './components/TeamRoster';
 import HomeRunVideos from './components/HomeRunVideos';
 import UserIcon from './components/UserIcon';
 import LeagueHistory from './components/LeagueHistory';
+import AdminPortal from './components/AdminPortal';
+import { useAuth } from './contexts/AuthContext';
 import { useLineChartData, useBarChartData } from './hooks/useChartData';
 import { useIsMobile } from './hooks/useWindowWidth';
 
@@ -25,7 +27,9 @@ function AppContent() {
 
   const navigate = useNavigate();
   const { teamId } = useParams();
+  const { user: authUser } = useAuth();
   const isMobile = useIsMobile();
+  const isCommissioner = authUser?.commissionerLeagues?.length > 0;
 
   const selectedTeam = teamId ? teams.find(t => t.id === parseInt(teamId, 10)) : null;
 
@@ -108,6 +112,7 @@ function AppContent() {
             <nav className="header-nav">
               <span className="nav-active">Current Season</span>
               <a href="/history">History</a>
+              {isCommissioner && <a href="/admin">Admin</a>}
             </nav>
           </div>
         </header>
@@ -233,6 +238,30 @@ function HistoryPage() {
   );
 }
 
+function AdminPage() {
+  return (
+    <>
+      <div className="star-field"></div>
+      <div className="scanlines"></div>
+      <div className="pink-glow"></div>
+      <div className="App">
+        <UserIcon />
+        <header className="App-header">
+          <div className="header-content">
+            <h1>Dong Bong League</h1>
+            <nav className="header-nav">
+              <a href="/">Current Season</a>
+              <a href="/history">History</a>
+              <span className="nav-active">Admin</span>
+            </nav>
+          </div>
+        </header>
+        <AdminPortal />
+      </div>
+    </>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -240,6 +269,7 @@ function App() {
         <Route path="/" element={<AppContent />} />
         <Route path="/team/:teamId" element={<AppContent />} />
         <Route path="/history" element={<HistoryPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </BrowserRouter>
   );
