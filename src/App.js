@@ -8,6 +8,7 @@ import TeamSelector from './components/TeamSelector';
 import TeamRoster from './components/TeamRoster';
 import HomeRunVideos from './components/HomeRunVideos';
 import UserIcon from './components/UserIcon';
+import LeagueHistory from './components/LeagueHistory';
 import { useLineChartData, useBarChartData } from './hooks/useChartData';
 import { useIsMobile } from './hooks/useWindowWidth';
 
@@ -104,6 +105,10 @@ function AppContent() {
           <div className="header-content">
             <h1>Dong Bong League</h1>
             <h2>{seasonYear} Season</h2>
+            <nav className="header-nav">
+              <span className="nav-active">Current Season</span>
+              <a href="/history">History</a>
+            </nav>
           </div>
         </header>
 
@@ -205,12 +210,36 @@ function AppContent() {
   );
 }
 
+function HistoryPage() {
+  return (
+    <>
+      <div className="star-field"></div>
+      <div className="scanlines"></div>
+      <div className="pink-glow"></div>
+      <div className="App">
+        <UserIcon />
+        <header className="App-header">
+          <div className="header-content">
+            <h1>Dong Bong League</h1>
+            <nav className="header-nav">
+              <a href="/">Current Season</a>
+              <span className="nav-active">History</span>
+            </nav>
+          </div>
+        </header>
+        <LeagueHistory />
+      </div>
+    </>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<AppContent />} />
         <Route path="/team/:teamId" element={<AppContent />} />
+        <Route path="/history" element={<HistoryPage />} />
       </Routes>
     </BrowserRouter>
   );

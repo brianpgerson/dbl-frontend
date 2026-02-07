@@ -149,6 +149,31 @@ body {
   text-shadow: 2px 2px 0px #111;
 }
 
+.header-nav {
+  margin-top: 10px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.header-nav a {
+  color: #19b8ff;
+  text-decoration: none;
+  font-size: 0.6rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.header-nav a:hover {
+  opacity: 1;
+  text-shadow: 0 0 5px rgba(25, 184, 255, 0.5);
+}
+
+.header-nav .nav-active {
+  color: #ff3333;
+  font-size: 0.6rem;
+}
+
 .chart-container {
   margin: 2rem auto;
   max-width: 900px;

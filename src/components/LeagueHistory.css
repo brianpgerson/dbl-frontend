@@ -1,0 +1,115 @@
+.league-history {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: rgba(17, 17, 17, 0.85);
+  border: 2px solid #19b8ff;
+  color: #fff;
+  font-family: 'Press Start 2P', cursive;
+  box-shadow: 0 0 20px rgba(41, 121, 255, 0.2);
+}
+
+.league-history h2 {
+  color: #ff3333;
+  font-size: 1.2rem;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.league-history h3 {
+  color: #19b8ff;
+  font-size: 1rem;
+  margin: 20px 0 15px;
+  text-align: center;
+}
+
+.league-history-loading,
+.league-history-empty {
+  text-align: center;
+  padding: 50px;
+  color: #19b8ff;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+}
+
+.season-list {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.season-button {
+  background: #111;
+  color: #19b8ff;
+  border: 2px solid #19b8ff;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.season-button:hover {
+  background: rgba(25, 184, 255, 0.15);
+}
+
+.season-button.active {
+  background: rgba(25, 184, 255, 0.25);
+  box-shadow: 0 0 10px rgba(25, 184, 255, 0.5);
+  color: #fff;
+}
+
+.standings-container {
+  margin-top: 20px;
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.standings-table th {
+  padding: 10px 8px;
+  color: #ff3333;
+  text-align: left;
+  border-bottom: 2px solid #19b8ff;
+}
+
+.standings-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(25, 184, 255, 0.3);
+}
+
+.standings-table tr:last-child td {
+  border-bottom: none;
+}
+
+.standings-table tr.champion td {
+  color: #ffff00;
+  text-shadow: 0 0 5px rgba(255, 255, 0, 0.3);
+}
+
+.standings-table .hr-count {
+  font-size: 1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff3333, 0 0 10px #ff3333;
+}
+
+@media (max-width: 768px) {
+  .league-history {
+    margin: 1rem 0.5rem;
+    padding: 1rem;
+  }
+
+  .standings-table {
+    font-size: 0.7rem;
+  }
+
+  .season-button {
+    font-size: 0.6rem;
+    padding: 6px 12px;
+  }
+}
