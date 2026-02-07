@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import LoginModal from './LoginModal';
-import '../PlayerSwapModal.css';
+import './PlayerSwapModal.css';
 
 const PlayerSwapModal = ({ team, roster, selectedPlayer, onClose, onSuccess }) => {
   const { isAuthenticated, user } = useAuth();

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import LoginModal from './LoginModal';
-import '../UserIcon.css';
+import './UserIcon.css';
 
 const UserIcon = () => {
   const { user, logout, isAuthenticated } = useAuth();

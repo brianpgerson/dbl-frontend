@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import PlayerSwapModal from './PlayerSwapModal';
-import '../TeamRoster.css';
+import './TeamRoster.css';
 
 const TeamRoster = ({ team }) => {
   const { canManageTeam } = useAuth();

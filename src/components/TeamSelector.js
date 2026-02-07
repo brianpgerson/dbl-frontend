@@ -1,5 +1,5 @@
 import React from 'react';
-import '../TeamSelector.css';
+import './TeamSelector.css';
 
 const TeamSelector = ({ teams, selectedTeam, onSelectTeam }) => {
   return (

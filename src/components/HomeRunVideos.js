@@ -1,6 +1,6 @@
 import React from 'react';
 import 'bsky-embed/dist/bsky-embed.es.js';
-import '../HomeRunVideos.css';
+import './HomeRunVideos.css';
 
 const HomeRunVideos = () => {
   return (
