@@ -131,15 +131,6 @@
   cursor: not-allowed;
 }
 
-.swap-arrow {
-  text-align: center;
-  font-size: 24px;
-  color: #00ffff;
-  margin: 10px 0;
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
-  animation: pulse 2s infinite;
-}
-
 .date-help {
   font-size: 8px;
   color: #888;
@@ -157,19 +148,6 @@
   font-size: 8px;
   text-align: center;
   animation: errorPulse 0.5s ease-in-out;
-}
-
-.validation-message {
-  background: linear-gradient(45deg, #ffaa00, #ffcc33);
-  color: #000;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 15px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 8px;
-  text-align: center;
-  border: 1px solid #ff8800;
-  text-shadow: none;
 }
 
 @keyframes errorPulse {
@@ -229,10 +207,6 @@
   }
 
   .date-help {
-    font-size: 7px;
-  }
-
-  .validation-message {
     font-size: 7px;
   }
 }

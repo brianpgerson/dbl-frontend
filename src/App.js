@@ -13,7 +13,9 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 
 function App() {
   const [raceData, setRaceData] = useState([]);
+  const [seasonYear, setSeasonYear] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null); // null means show charts
   const [timeInterval, setTimeInterval] = useState('full'); // 'full', 'month', or 'week'
@@ -23,14 +25,17 @@ function App() {
     // Connect to real backend data
     axios.get(`${process.env.REACT_APP_API_URL}/api/race`)
       .then(response => {
-        setRaceData(response.data);
+        setRaceData(response.data.data || response.data);
+        setSeasonYear(response.data.season_year || new Date().getFullYear());
         setLoading(false);
       })
       .catch(error => {
         console.error('Error fetching race data:', error);
+        setLoadError('Failed to load race data. Please refresh the page.');
+        setLoading(false);
       });
   }, []);
-  
+
   // Fetch teams
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/teams`)
@@ -219,7 +224,22 @@ function App() {
         </header>
         <div className="loading">
           <p>LOADING DATA...</p>
-          <p style={{ fontSize: '24px' }}>⏳ 8%</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="App">
+        <header className="App-header">
+          <h1>Dong Bong League</h1>
+        </header>
+        <div className="loading">
+          <p>{loadError}</p>
+          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer' }}>
+            RETRY
+          </button>
         </div>
       </div>
     );
@@ -236,7 +256,7 @@ function App() {
         <header className="App-header">
           <div className="header-content">
             <h1>Dong Bong League</h1>
-            <h2>{new Date().getFullYear()} Season</h2>
+            <h2>{seasonYear} Season</h2>
           </div>
         </header>
         
@@ -293,7 +313,7 @@ function App() {
                 },
                 plugins: {
                   legend: { 
-                    position: window.innerWidth <= 768 ? 'bottom' : 'bottom',
+                    position: 'bottom',
                     align: 'start',
                     labels: { 
                       font: { family: "'Press Start 2P', cursive", size: window.innerWidth <= 768 ? 7 : 10 },

@@ -38,31 +38,6 @@
   text-shadow: 1px 1px 0px #000;
 }
 
-.swap-players-button {
-  background: linear-gradient(45deg, #00ff00, #00ffff);
-  border: none;
-  color: #000;
-  padding: 12px 16px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 10px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  text-transform: uppercase;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.swap-players-button:hover {
-  background: linear-gradient(45deg, #00ffff, #00ff00);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
-}
-
-.swap-players-button:active {
-  transform: translateY(0);
-}
-
 .hrs-count {
   font-size: 1.2rem;
   color: #ffffff;

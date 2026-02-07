@@ -11,25 +11,59 @@ export const useAuth = () => {
   return context;
 };
 
+// Check if a JWT is expired by decoding the payload
+const isTokenExpired = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Set up axios interceptor to handle 401/403 responses (expired tokens)
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          // Token is invalid or expired — clear auth state
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          delete axios.defaults.headers.common['Authorization'];
+          setUser(null);
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
+  }, []);
 
   useEffect(() => {
     // Check for existing token on app load
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('authUser');
-    
+
     if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        // Set default auth header for axios
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
+      // Check if token is expired before restoring session
+      if (isTokenExpired(token)) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
+      } else {
+        try {
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+          // Set default auth header for axios
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        } catch (error) {
+          console.error('Error parsing stored user data:', error);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+        }
       }
     }
     setLoading(false);
