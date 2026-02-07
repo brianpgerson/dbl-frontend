@@ -10,6 +10,7 @@ import HomeRunVideos from './components/HomeRunVideos';
 import UserIcon from './components/UserIcon';
 import LeagueHistory from './components/LeagueHistory';
 import AdminPortal from './components/AdminPortal';
+import DraftBoard from './components/DraftBoard';
 import { useAuth } from './contexts/AuthContext';
 import { useLineChartData, useBarChartData } from './hooks/useChartData';
 import { useIsMobile } from './hooks/useWindowWidth';
@@ -262,6 +263,30 @@ function AdminPage() {
   );
 }
 
+function DraftPage() {
+  const { leagueId } = useParams();
+  return (
+    <>
+      <div className="star-field"></div>
+      <div className="scanlines"></div>
+      <div className="pink-glow"></div>
+      <div className="App">
+        <UserIcon />
+        <header className="App-header">
+          <div className="header-content">
+            <h1>Dong Bong League</h1>
+            <nav className="header-nav">
+              <a href="/">Current Season</a>
+              <span className="nav-active">Draft</span>
+            </nav>
+          </div>
+        </header>
+        <DraftBoard leagueId={leagueId} />
+      </div>
+    </>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -270,6 +295,7 @@ function App() {
         <Route path="/team/:teamId" element={<AppContent />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/draft/:leagueId" element={<DraftPage />} />
       </Routes>
     </BrowserRouter>
   );

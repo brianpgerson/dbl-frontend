@@ -26,6 +26,11 @@ const AdminPortal = () => {
   // New team form
   const [newTeam, setNewTeam] = useState({ league_id: '', name: '', manager_name: '' });
 
+  // Draft setup
+  const [draftLeagueId, setDraftLeagueId] = useState('');
+  const [draftTeams, setDraftTeams] = useState([]);
+  const [draftOrder, setDraftOrder] = useState([]);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -90,6 +95,67 @@ const AdminPortal = () => {
     }
   };
 
+  const loadDraftTeams = async (leagueId) => {
+    setDraftLeagueId(leagueId);
+    if (!leagueId) return;
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/teams?league_id=${leagueId}`);
+      setDraftTeams(response.data);
+      setDraftOrder(response.data.map((t, i) => ({ team_id: t.id, order_position: i + 1, name: t.name, manager_name: t.manager_name })));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const moveDraftOrder = (index, direction) => {
+    const newOrder = [...draftOrder];
+    const swapIndex = index + direction;
+    if (swapIndex < 0 || swapIndex >= newOrder.length) return;
+    [newOrder[index], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[index]];
+    newOrder.forEach((item, i) => { item.order_position = i + 1; });
+    setDraftOrder(newOrder);
+  };
+
+  const handleCreateDraft = async () => {
+    if (!draftLeagueId || draftOrder.length === 0) {
+      showMessage('Select a league and set the draft order first');
+      return;
+    }
+    try {
+      // Create draft
+      const draftRes = await axios.post(`${process.env.REACT_APP_API_URL}/api/draft`, {
+        league_id: draftLeagueId,
+        draft_type: 'snake',
+        rounds: 11
+      });
+      const draftId = draftRes.data.draft.id;
+
+      // Set order
+      const orderRes = await axios.post(`${process.env.REACT_APP_API_URL}/api/draft/${draftId}/order`, {
+        order: draftOrder.map(t => ({ team_id: t.team_id, order_position: t.order_position }))
+      });
+
+      showMessage(`Draft created! ${orderRes.data.message}`);
+    } catch (err) {
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  const handleStartDraft = async () => {
+    try {
+      // Get existing draft for the league
+      const draftRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/draft/league/${draftLeagueId}`);
+      if (!draftRes.data.draft) {
+        showMessage('No draft found. Create one first.');
+        return;
+      }
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/draft/${draftRes.data.draft.id}/start`);
+      showMessage('Draft started! Go to the draft board to make picks.');
+    } catch (err) {
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
   if (!user?.commissionerLeagues?.length) {
     return (
       <div className="admin-portal">
@@ -118,6 +184,9 @@ const AdminPortal = () => {
         </button>
         <button className={activeTab === 'teams' ? 'active' : ''} onClick={() => setActiveTab('teams')}>
           Teams
+        </button>
+        <button className={activeTab === 'draft' ? 'active' : ''} onClick={() => setActiveTab('draft')}>
+          Draft
         </button>
       </div>
 
@@ -285,6 +354,56 @@ const AdminPortal = () => {
             </div>
             <button type="submit" className="admin-submit">Create Team</button>
           </form>
+        </div>
+      )}
+
+      {activeTab === 'draft' && (
+        <div className="admin-section">
+          <h3>Draft Setup</h3>
+
+          <div className="form-row">
+            <label>League</label>
+            <select value={draftLeagueId} onChange={e => loadDraftTeams(e.target.value)}>
+              <option value="">Select League</option>
+              {leagues.map(l => (
+                <option key={l.id} value={l.id}>{l.season_year} — {l.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {draftOrder.length > 0 && (
+            <>
+              <h4>Draft Order (drag to reorder)</h4>
+              <div className="draft-order-list">
+                {draftOrder.map((team, index) => (
+                  <div key={team.team_id} className="draft-order-item">
+                    <span className="order-number">{index + 1}.</span>
+                    <span className="order-team">{team.manager_name}'s {team.name}</span>
+                    <div className="order-buttons">
+                      <button onClick={() => moveDraftOrder(index, -1)} disabled={index === 0}>↑</button>
+                      <button onClick={() => moveDraftOrder(index, 1)} disabled={index === draftOrder.length - 1}>↓</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                <button className="admin-submit" onClick={handleCreateDraft}>
+                  Create Draft
+                </button>
+                <button className="admin-submit" onClick={handleStartDraft}>
+                  Start Draft
+                </button>
+                <a
+                  href={`/draft/${draftLeagueId}`}
+                  className="admin-submit"
+                  style={{ display: 'inline-block', textDecoration: 'none', textAlign: 'center' }}
+                >
+                  Go to Draft Board →
+                </a>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

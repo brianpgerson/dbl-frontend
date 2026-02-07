@@ -1,0 +1,285 @@
+.draft-board {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: rgba(17, 17, 17, 0.85);
+  border: 2px solid #00ff00;
+  color: #fff;
+  font-family: 'Press Start 2P', cursive;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+}
+
+.draft-board h2 {
+  color: #00ff00;
+  font-size: 1.2rem;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.draft-board h3 {
+  color: #19b8ff;
+  font-size: 0.8rem;
+  margin: 15px 0 10px;
+}
+
+.draft-loading,
+.draft-empty {
+  text-align: center;
+  padding: 50px;
+  color: #19b8ff;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+}
+
+.draft-hint {
+  text-align: center;
+  color: #888;
+  font-size: 0.6rem;
+}
+
+.draft-status {
+  text-align: center;
+  padding: 12px;
+  font-size: 0.7rem;
+  margin-bottom: 15px;
+  border: 2px solid;
+}
+
+.draft-status.status-setup {
+  border-color: #888;
+  color: #888;
+}
+
+.draft-status.status-active {
+  border-color: #00ff00;
+  color: #00ff00;
+  background: rgba(0, 255, 0, 0.05);
+  animation: pulse-border 2s infinite;
+}
+
+.draft-status.status-complete {
+  border-color: #ffff00;
+  color: #ffff00;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
+  100% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.3); }
+}
+
+.clock-team {
+  color: #ffff00;
+  margin-left: 10px;
+}
+
+.clock-pick {
+  display: block;
+  font-size: 0.6rem;
+  margin-top: 5px;
+  color: #19b8ff;
+}
+
+.draft-message {
+  background: rgba(0, 255, 0, 0.15);
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  padding: 8px;
+  margin-bottom: 15px;
+  font-size: 0.6rem;
+  text-align: center;
+}
+
+/* Commissioner controls */
+.commissioner-controls {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #ff3333;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.pick-controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.position-select,
+.player-search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.pick-controls label {
+  display: block;
+  color: #19b8ff;
+  font-size: 0.6rem;
+  margin-bottom: 5px;
+}
+
+.pick-controls input,
+.pick-controls select {
+  width: 100%;
+  padding: 8px;
+  background: #0a0a0a;
+  border: 2px solid #333;
+  color: #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+  box-sizing: border-box;
+}
+
+.pick-controls input:focus,
+.pick-controls select:focus {
+  outline: none;
+  border-color: #00ff00;
+}
+
+.search-results {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #333;
+  margin-bottom: 10px;
+}
+
+.search-result {
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  border-bottom: 1px solid #222;
+}
+
+.search-result:hover {
+  background: rgba(0, 255, 0, 0.1);
+}
+
+.result-name {
+  color: #fff;
+}
+
+.result-pos {
+  color: #19b8ff;
+}
+
+.result-status {
+  color: #888;
+  font-size: 0.5rem;
+}
+
+.undo-button {
+  background: #333;
+  border: 1px solid #888;
+  color: #ff3333;
+  padding: 6px 12px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.undo-button:hover {
+  background: #444;
+}
+
+/* Draft grid */
+.draft-grid {
+  overflow-x: auto;
+}
+
+.draft-grid table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.draft-grid th {
+  padding: 8px 4px;
+  color: #ff3333;
+  font-size: 0.55rem;
+  border-bottom: 2px solid #19b8ff;
+  text-align: center;
+}
+
+.team-header-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.round-number {
+  color: #19b8ff;
+  font-size: 0.6rem;
+  text-align: center;
+  width: 40px;
+}
+
+.pick-cell {
+  padding: 4px;
+  text-align: center;
+  border: 1px solid #222;
+  height: 40px;
+  min-width: 70px;
+}
+
+.pick-cell.picked {
+  background: rgba(0, 255, 0, 0.05);
+}
+
+.pick-cell.on-clock {
+  background: rgba(255, 255, 0, 0.1);
+  border-color: #ffff00;
+  animation: pulse-border 2s infinite;
+}
+
+.pick-cell.pending {
+  opacity: 0.3;
+}
+
+.pick-info {
+  font-size: 0.5rem;
+}
+
+.pick-player {
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pick-position {
+  color: #19b8ff;
+  font-size: 0.45rem;
+  margin-top: 2px;
+}
+
+.pick-empty {
+  color: #333;
+  font-size: 0.6rem;
+}
+
+@media (max-width: 768px) {
+  .draft-board {
+    margin: 1rem 0.5rem;
+    padding: 1rem;
+  }
+
+  .pick-controls {
+    flex-direction: column;
+  }
+
+  .draft-grid th {
+    font-size: 0.45rem;
+  }
+
+  .pick-cell {
+    min-width: 50px;
+  }
+
+  .pick-info {
+    font-size: 0.4rem;
+  }
+}
