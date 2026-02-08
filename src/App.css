@@ -362,6 +362,44 @@ body {
   }
 }
 
+.state-banner {
+  max-width: 700px;
+  margin: 3rem auto;
+  padding: 2rem;
+  text-align: center;
+  border: 2px solid;
+}
+
+.state-banner h3 {
+  font-size: 1.1rem;
+  margin: 0 0 15px 0;
+}
+
+.state-banner p {
+  font-size: 0.65rem;
+  line-height: 2;
+  margin: 0;
+}
+
+.state-offseason {
+  border-color: #19b8ff;
+  color: #19b8ff;
+}
+
+.state-offseason h3 {
+  color: #19b8ff;
+}
+
+.state-preseason {
+  border-color: #ffff00;
+  color: #ffff00;
+  box-shadow: 0 0 20px rgba(255, 255, 0, 0.15);
+}
+
+.state-preseason h3 {
+  color: #ffff00;
+}
+
 .draft-live-banner {
   max-width: 600px;
   margin: 4rem auto;
