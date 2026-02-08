@@ -15,15 +15,6 @@ const AdminPortal = () => {
   const [message, setMessage] = useState('');
   const [activeTab, setActiveTab] = useState('settings');
 
-  // New season form
-  const [newSeason, setNewSeason] = useState({
-    name: 'Dong Bong League',
-    season_year: new Date().getFullYear(),
-    start_date: '',
-    end_date: '',
-    source_season_id: ''
-  });
-
   // New user form
   const [newUser, setNewUser] = useState({ email: '', password: '' });
 
@@ -49,10 +40,6 @@ const AdminPortal = () => {
       const seasons = seasonsRes.data;
       const activeSeason = seasons[0] || null;
       setActiveLeague(activeSeason); // reusing state name for now
-
-      if (seasons.length > 0) {
-        setNewSeason(prev => ({ ...prev, source_season_id: seasons[0].id, league_id: seasons[0].league_id }));
-      }
 
       // Check draft status for active season
       if (activeSeason) {
@@ -82,22 +69,48 @@ const AdminPortal = () => {
   };
 
   // Determine the portal state
+  const [appState, setAppState] = useState(null);
+  const [statusData, setStatusData] = useState(null);
+
+  const loadStatus = () => {
+    axios.get(`${process.env.REACT_APP_API_URL}/api/status`)
+      .then(res => {
+        setAppState(res.data.state);
+        setStatusData(res.data);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => { loadStatus(); }, []);
+
   const getPortalState = () => {
-    if (!draftStatus || draftStatus === 'setup') return 'preseason';
+    if (appState === 'offseason') return 'offseason';
     if (draftStatus === 'active') return 'draft';
-    return 'season'; // complete
+    if (draftStatus === 'complete') return 'season';
+    return 'preseason';
   };
 
   const portalState = getPortalState();
 
   // ---- PRESEASON HANDLERS ----
 
-  const handleNewSeason = async (e) => {
-    e.preventDefault();
+  const handleNewSeason = async () => {
+    const ps = statusData?.next_platform_season;
+    if (!ps) {
+      showMessage('No upcoming platform season available');
+      return;
+    }
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/new-season`, newSeason);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/new-season`, {
+        league_id: activeLeague?.league_id || seasons[0]?.league_id,
+        season_year: ps.year,
+        start_date: ps.start_date,
+        end_date: ps.end_date,
+        source_season_id: activeLeague?.id || seasons[0]?.id
+      });
       showMessage(response.data.message);
       loadData();
+      loadStatus();
     } catch (err) {
       showMessage(`Error: ${err.response?.data?.error || err.message}`);
     }
@@ -187,12 +200,42 @@ const AdminPortal = () => {
     <div className="admin-portal">
       <h2>Commissioner Portal</h2>
       <div className="portal-state-badge">
+        {portalState === 'offseason' && <span className="state-preseason">Offseason</span>}
         {portalState === 'preseason' && <span className="state-preseason">Preseason</span>}
         {portalState === 'draft' && <span className="state-draft">Draft Active</span>}
         {portalState === 'season' && <span className="state-season">{activeLeague?.season_year} Season</span>}
       </div>
 
       {message && <div className="admin-message">{message}</div>}
+
+      {/* ============ OFFSEASON STATE ============ */}
+      {portalState === 'offseason' && (
+        <div className="admin-section">
+          {statusData?.next_platform_season ? (
+            <>
+              <h3>Start {statusData.next_platform_season.year} Season</h3>
+              <div className="new-season-summary">
+                <p>This will:</p>
+                <ul>
+                  <li>Create the {statusData.next_platform_season.year} season</li>
+                  <li>Copy all teams and managers from {activeLeague?.season_year || 'last season'}</li>
+                  <li>Reassign all users to their teams</li>
+                  <li>Set scoring dates: {statusData.next_platform_season.start_date} to {statusData.next_platform_season.end_date}</li>
+                </ul>
+              </div>
+              <button className="admin-submit" onClick={handleNewSeason}>
+                Start {statusData.next_platform_season.year} Season
+              </button>
+            </>
+          ) : (
+            <>
+              <h3>Offseason</h3>
+              <p className="admin-hint">The {activeLeague?.season_year || 'previous'} season has ended. No new platform season is available yet.</p>
+            </>
+          )}
+
+        </div>
+      )}
 
       {/* ============ DRAFT ACTIVE STATE ============ */}
       {portalState === 'draft' && (
@@ -218,9 +261,6 @@ const AdminPortal = () => {
       {portalState === 'preseason' && (
         <>
           <div className="admin-tabs">
-            <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}>
-              Season Setup
-            </button>
             <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>
               Users
             </button>
@@ -228,41 +268,6 @@ const AdminPortal = () => {
               Start Draft
             </button>
           </div>
-
-          {activeTab === 'settings' && (
-            <div className="admin-section">
-              <h3>Create New Season</h3>
-              <p className="admin-hint">Creates a new league, clones teams and roster templates from a previous season, and reassigns users.</p>
-              <form onSubmit={handleNewSeason} className="admin-form">
-                <div className="form-row">
-                  <label>League Name</label>
-                  <input type="text" value={newSeason.name} onChange={e => setNewSeason({ ...newSeason, name: e.target.value })} required />
-                </div>
-                <div className="form-row">
-                  <label>Season Year</label>
-                  <input type="number" value={newSeason.season_year} onChange={e => setNewSeason({ ...newSeason, season_year: parseInt(e.target.value, 10) })} required />
-                </div>
-                <div className="form-row">
-                  <label>Start Date</label>
-                  <input type="date" value={newSeason.start_date} onChange={e => setNewSeason({ ...newSeason, start_date: e.target.value })} required />
-                </div>
-                <div className="form-row">
-                  <label>End Date</label>
-                  <input type="date" value={newSeason.end_date} onChange={e => setNewSeason({ ...newSeason, end_date: e.target.value })} required />
-                </div>
-                <div className="form-row">
-                  <label>Copy From Season</label>
-                  <select value={newSeason.source_season_id} onChange={e => setNewSeason({ ...newSeason, source_season_id: e.target.value })}>
-                    <option value="">Start Fresh</option>
-                    {seasons.map(s => (
-                      <option key={s.id} value={s.id}>{s.season_year} — {s.league_name}</option>
-                    ))}
-                  </select>
-                </div>
-                <button type="submit" className="admin-submit">Create Season</button>
-              </form>
-            </div>
-          )}
 
           {activeTab === 'users' && (
             <div className="admin-section">
@@ -272,10 +277,10 @@ const AdminPortal = () => {
                   <tr><th>Email</th><th>Role</th></tr>
                 </thead>
                 <tbody>
-                  {users.map(u => (
+                  {(users || []).map(u => (
                     <tr key={u.id}>
                       <td>{u.email}</td>
-                      <td>{u.assignments?.[0]?.role !== null ? u.assignments.map(a => a.role).filter(Boolean).join(', ') : 'unassigned'}</td>
+                      <td>{u.league_roles?.length > 0 ? u.league_roles.map(r => r.role).join(', ') : 'member'}</td>
                     </tr>
                   ))}
                 </tbody>
