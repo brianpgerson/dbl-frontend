@@ -172,6 +172,121 @@
   margin-left: 8px;
 }
 
+.selected-player-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 255, 0, 0.1);
+  border: 1px solid #00ff00;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.selected-label {
+  color: #888;
+  font-size: 0.5rem;
+}
+
+.selected-name {
+  color: #00ff00;
+  font-size: 0.65rem;
+  flex: 1;
+}
+
+.selected-pos-badge {
+  color: #19b8ff;
+  font-size: 0.5rem;
+  border: 1px solid #19b8ff;
+  padding: 2px 6px;
+}
+
+.clear-selection {
+  background: none;
+  border: 1px solid #ff3333;
+  color: #ff3333;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.position-selector {
+  margin: 10px 0;
+}
+
+.position-selector label {
+  display: block;
+  color: #19b8ff;
+  font-size: 0.6rem;
+  margin-bottom: 5px;
+}
+
+.position-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pos-btn {
+  background: #222;
+  border: 2px solid #555;
+  color: #fff;
+  padding: 8px 12px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  cursor: pointer;
+  min-height: 36px;
+  min-width: 40px;
+  position: relative;
+}
+
+.pos-btn:hover:not(:disabled) {
+  border-color: #19b8ff;
+}
+
+.pos-btn.selected {
+  background: rgba(0, 255, 0, 0.2);
+  border-color: #00ff00;
+  color: #00ff00;
+}
+
+.pos-btn.filled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.filled-check {
+  font-size: 0.4rem;
+  margin-left: 2px;
+}
+
+.confirm-pick-btn {
+  width: 100%;
+  background: linear-gradient(45deg, #00ff00, #00ffff);
+  border: none;
+  color: #000;
+  padding: 14px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+  cursor: pointer;
+  margin: 10px 0;
+  transition: all 0.2s ease;
+}
+
+.confirm-pick-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+}
+
+.confirm-pick-btn:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
 .active-only-toggle {
   display: flex;
   align-items: center;
