@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import './DraftBoard.css';
 
+const POSITIONS = ['C', '1B', '2B', 'SS', '3B', 'LF', 'CF', 'RF', 'DH', 'BEN'];
+
 const DraftBoard = ({ leagueId }) => {
   const { user } = useAuth();
   const [draftData, setDraftData] = useState(null);
@@ -11,11 +13,14 @@ const DraftBoard = ({ leagueId }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [selectedPosition, setSelectedPosition] = useState('');
   const [message, setMessage] = useState('');
+  const [editingPick, setEditingPick] = useState(null); // { pick_number, current_position }
 
   const isCommissioner = user?.commissionerLeagues?.length > 0;
 
-  // Roster positions for the draft
-  const POSITIONS = ['C', '1B', '2B', 'SS', '3B', 'LF', 'CF', 'RF', 'DH', 'BEN'];
+  const showMessage = (msg) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(''), 5000);
+  };
 
   const loadDraft = useCallback(async () => {
     try {
@@ -32,7 +37,6 @@ const DraftBoard = ({ leagueId }) => {
 
   useEffect(() => {
     loadDraft();
-    // Poll for updates every 10 seconds
     const interval = setInterval(loadDraft, 10000);
     return () => clearInterval(interval);
   }, [loadDraft]);
@@ -55,7 +59,7 @@ const DraftBoard = ({ leagueId }) => {
 
   const makePick = async (playerId) => {
     if (!selectedPosition) {
-      setMessage('Select a roster position first');
+      showMessage('Select a roster position first');
       return;
     }
     try {
@@ -63,13 +67,13 @@ const DraftBoard = ({ leagueId }) => {
         `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/pick`,
         { player_id: playerId, position: selectedPosition }
       );
-      setMessage(`Pick #${response.data.pick.pick_number}: ${response.data.pick.player_name} (${response.data.pick.position})`);
+      showMessage(`Pick #${response.data.pick.pick_number}: ${response.data.pick.player_name} (${response.data.pick.position})`);
       setSearchQuery('');
       setSearchResults([]);
       setSelectedPosition('');
       loadDraft();
     } catch (err) {
-      setMessage(`Error: ${err.response?.data?.error || err.message}`);
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
     }
   };
 
@@ -78,10 +82,33 @@ const DraftBoard = ({ leagueId }) => {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/undo`
       );
-      setMessage(response.data.message);
+      showMessage(response.data.message);
       loadDraft();
     } catch (err) {
-      setMessage(`Error: ${err.response?.data?.error || err.message}`);
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  const editPickPosition = async (pickNumber, newPosition) => {
+    try {
+      const response = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/pick/${pickNumber}`,
+        { position: newPosition }
+      );
+      showMessage(response.data.message);
+      setEditingPick(null);
+      loadDraft();
+    } catch (err) {
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  const handlePickCellClick = (pick) => {
+    if (!isCommissioner || !pick.player_id) return;
+    if (editingPick?.pick_number === pick.pick_number) {
+      setEditingPick(null);
+    } else {
+      setEditingPick({ pick_number: pick.pick_number, current_position: pick.position });
     }
   };
 
@@ -110,6 +137,9 @@ const DraftBoard = ({ leagueId }) => {
     picksByRound[pick.round].push(pick);
   });
 
+  // Count picks made
+  const picksMade = picks.filter(p => p.player_id).length;
+
   return (
     <div className="draft-board">
       <h2>Draft Board</h2>
@@ -120,52 +150,77 @@ const DraftBoard = ({ leagueId }) => {
         {draft.status === 'active' && on_the_clock && (
           <>
             ON THE CLOCK: <span className="clock-team">{on_the_clock.manager_name}'s {on_the_clock.team_name}</span>
-            <span className="clock-pick">Pick #{on_the_clock.pick_number} (Round {on_the_clock.round})</span>
+            <span className="clock-pick">Pick #{on_the_clock.pick_number} (Round {on_the_clock.round}) — {picksMade}/{draft.total_picks} picks made</span>
           </>
         )}
-        {draft.status === 'complete' && 'DRAFT COMPLETE'}
+        {draft.status === 'complete' && `DRAFT COMPLETE — ${picksMade} picks`}
       </div>
 
       {message && <div className="draft-message">{message}</div>}
 
       {/* Commissioner controls */}
-      {isCommissioner && draft.status === 'active' && (
+      {isCommissioner && (draft.status === 'active' || draft.status === 'complete') && (
         <div className="commissioner-controls">
-          <h3>Make Pick</h3>
-          <div className="pick-controls">
-            <div className="position-select">
-              <label>Position:</label>
-              <select value={selectedPosition} onChange={e => setSelectedPosition(e.target.value)}>
-                <option value="">Select...</option>
-                {POSITIONS.map(pos => (
-                  <option key={pos} value={pos}>{pos}</option>
-                ))}
-              </select>
-            </div>
-            <div className="player-search">
-              <label>Search Player:</label>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => searchPlayers(e.target.value)}
-                placeholder="Type player name..."
-              />
-            </div>
-          </div>
-
-          {searchResults.length > 0 && (
-            <div className="search-results">
-              {searchResults.map(player => (
-                <div key={player.id} className="search-result" onClick={() => makePick(player.id)}>
-                  <span className="result-name">{player.name}</span>
-                  <span className="result-pos">{player.primary_position}</span>
-                  <span className="result-status">{player.status}</span>
+          {draft.status === 'active' && (
+            <>
+              <h3>Make Pick</h3>
+              <div className="pick-controls">
+                <div className="position-select">
+                  <label>Position:</label>
+                  <select value={selectedPosition} onChange={e => setSelectedPosition(e.target.value)}>
+                    <option value="">Select...</option>
+                    {POSITIONS.map(pos => (
+                      <option key={pos} value={pos}>{pos}</option>
+                    ))}
+                  </select>
                 </div>
-              ))}
+                <div className="player-search">
+                  <label>Search Player:</label>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => searchPlayers(e.target.value)}
+                    placeholder="Type player name..."
+                  />
+                </div>
+              </div>
+
+              {searchResults.length > 0 && (
+                <div className="search-results">
+                  {searchResults.map(player => (
+                    <div key={player.id} className="search-result" onClick={() => makePick(player.id)}>
+                      <span className="result-name">{player.name}</span>
+                      <span className="result-pos">{player.primary_position}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button className="undo-button" onClick={undoPick}>Undo Last Pick</button>
+            </>
+          )}
+
+          {editingPick && (
+            <div className="edit-position-bar">
+              <span className="edit-label">Change position for pick #{editingPick.pick_number}:</span>
+              <div className="edit-position-buttons">
+                {POSITIONS.map(pos => (
+                  <button
+                    key={pos}
+                    className={`edit-pos-btn ${pos === editingPick.current_position ? 'current' : ''}`}
+                    onClick={() => editPickPosition(editingPick.pick_number, pos)}
+                  >
+                    {pos}
+                  </button>
+                ))}
+                <button className="edit-pos-cancel" onClick={() => setEditingPick(null)}>Cancel</button>
+              </div>
             </div>
           )}
 
-          <button className="undo-button" onClick={undoPick}>Undo Last Pick</button>
+          {!editingPick && draft.status !== 'setup' && (
+            <p className="edit-hint">Tap any pick to change its position</p>
+          )}
         </div>
       )}
 
@@ -174,7 +229,7 @@ const DraftBoard = ({ leagueId }) => {
         <table>
           <thead>
             <tr>
-              <th>Round</th>
+              <th>Rd</th>
               {order.map(team => (
                 <th key={team.team_id} className="team-header">
                   <div className="team-header-name">{team.manager_name}</div>
@@ -191,7 +246,10 @@ const DraftBoard = ({ leagueId }) => {
                     key={pick.pick_number}
                     className={`pick-cell ${pick.player_id ? 'picked' : 'pending'} ${
                       on_the_clock?.pick_number === pick.pick_number ? 'on-clock' : ''
+                    } ${editingPick?.pick_number === pick.pick_number ? 'editing' : ''} ${
+                      isCommissioner && pick.player_id ? 'editable' : ''
                     }`}
+                    onClick={() => handlePickCellClick(pick)}
                   >
                     {pick.player_id ? (
                       <div className="pick-info">

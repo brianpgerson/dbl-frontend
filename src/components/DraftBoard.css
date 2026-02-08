@@ -108,7 +108,7 @@
 .position-select,
 .player-search {
   flex: 1;
-  min-width: 200px;
+  min-width: 150px;
 }
 
 .pick-controls label {
@@ -121,13 +121,15 @@
 .pick-controls input,
 .pick-controls select {
   width: 100%;
-  padding: 8px;
+  padding: 12px 8px;
   background: #0a0a0a;
   border: 2px solid #333;
   color: #00ff00;
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   box-sizing: border-box;
+  -webkit-appearance: none;
+  border-radius: 0;
 }
 
 .pick-controls input:focus,
@@ -137,56 +139,123 @@
 }
 
 .search-results {
-  max-height: 200px;
+  max-height: 250px;
   overflow-y: auto;
   border: 1px solid #333;
   margin-bottom: 10px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .search-result {
-  padding: 8px;
+  padding: 12px 8px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 0.6rem;
   border-bottom: 1px solid #222;
+  min-height: 44px;
 }
 
-.search-result:hover {
-  background: rgba(0, 255, 0, 0.1);
+.search-result:hover,
+.search-result:active {
+  background: rgba(0, 255, 0, 0.15);
 }
 
 .result-name {
   color: #fff;
+  flex: 1;
 }
 
 .result-pos {
   color: #19b8ff;
-}
-
-.result-status {
-  color: #888;
-  font-size: 0.5rem;
+  margin-left: 8px;
 }
 
 .undo-button {
   background: #333;
   border: 1px solid #888;
   color: #ff3333;
-  padding: 6px 12px;
+  padding: 10px 16px;
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.5rem;
+  font-size: 0.55rem;
   cursor: pointer;
+  margin-top: 10px;
+  min-height: 44px;
+}
+
+.undo-button:hover,
+.undo-button:active {
+  background: #444;
+}
+
+/* Edit position controls */
+.edit-position-bar {
+  background: rgba(25, 184, 255, 0.1);
+  border: 1px solid #19b8ff;
+  padding: 10px;
   margin-top: 10px;
 }
 
-.undo-button:hover {
-  background: #444;
+.edit-label {
+  display: block;
+  color: #19b8ff;
+  font-size: 0.55rem;
+  margin-bottom: 8px;
+}
+
+.edit-position-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.edit-pos-btn {
+  background: #222;
+  border: 1px solid #555;
+  color: #fff;
+  padding: 8px 10px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  cursor: pointer;
+  min-height: 36px;
+  min-width: 36px;
+}
+
+.edit-pos-btn:hover,
+.edit-pos-btn:active {
+  background: rgba(0, 255, 0, 0.2);
+  border-color: #00ff00;
+}
+
+.edit-pos-btn.current {
+  background: rgba(25, 184, 255, 0.3);
+  border-color: #19b8ff;
+  color: #19b8ff;
+}
+
+.edit-pos-cancel {
+  background: #333;
+  border: 1px solid #ff3333;
+  color: #ff3333;
+  padding: 8px 10px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.edit-hint {
+  color: #555;
+  font-size: 0.45rem;
+  margin-top: 8px;
+  text-align: center;
 }
 
 /* Draft grid */
 .draft-grid {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .draft-grid table {
@@ -214,19 +283,33 @@
   color: #19b8ff;
   font-size: 0.6rem;
   text-align: center;
-  width: 40px;
+  width: 30px;
 }
 
 .pick-cell {
   padding: 4px;
   text-align: center;
   border: 1px solid #222;
-  height: 40px;
+  height: 44px;
   min-width: 70px;
 }
 
 .pick-cell.picked {
   background: rgba(0, 255, 0, 0.05);
+}
+
+.pick-cell.editable {
+  cursor: pointer;
+}
+
+.pick-cell.editable:hover {
+  background: rgba(25, 184, 255, 0.1);
+}
+
+.pick-cell.editing {
+  background: rgba(25, 184, 255, 0.2);
+  border-color: #19b8ff;
+  border-width: 2px;
 }
 
 .pick-cell.on-clock {
@@ -261,25 +344,87 @@
   font-size: 0.6rem;
 }
 
+/* Mobile */
 @media (max-width: 768px) {
   .draft-board {
-    margin: 1rem 0.5rem;
-    padding: 1rem;
+    margin: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .draft-board h2 {
+    font-size: 1rem;
+  }
+
+  .draft-status {
+    font-size: 0.55rem;
+    padding: 10px;
+  }
+
+  .clock-team {
+    display: block;
+    margin-left: 0;
+    margin-top: 4px;
   }
 
   .pick-controls {
     flex-direction: column;
+    gap: 10px;
+  }
+
+  .position-select,
+  .player-search {
+    min-width: 100%;
+  }
+
+  .pick-controls input,
+  .pick-controls select {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    padding: 14px 8px;
+  }
+
+  .search-result {
+    padding: 14px 8px;
+    font-size: 0.55rem;
   }
 
   .draft-grid th {
-    font-size: 0.45rem;
+    font-size: 0.4rem;
+    padding: 6px 2px;
+  }
+
+  .team-header-name {
+    max-width: 50px;
   }
 
   .pick-cell {
-    min-width: 50px;
+    min-width: 45px;
+    height: 40px;
+    padding: 2px;
   }
 
   .pick-info {
-    font-size: 0.4rem;
+    font-size: 0.38rem;
+  }
+
+  .pick-position {
+    font-size: 0.35rem;
+  }
+
+  .round-number {
+    font-size: 0.5rem;
+    width: 22px;
+  }
+
+  .edit-pos-btn {
+    padding: 10px 8px;
+    font-size: 0.45rem;
+  }
+
+  .edit-label {
+    font-size: 0.5rem;
+  }
+
+  .commissioner-controls {
+    padding: 10px;
   }
 }
