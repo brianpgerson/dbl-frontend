@@ -288,13 +288,19 @@
 }
 
 .active-only-toggle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: #888;
-  font-size: 0.5rem;
-  margin-bottom: 10px;
+  font-size: 0.45rem;
+  margin-top: 5px;
   cursor: pointer;
+}
+
+.draft-controls-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 5px;
 }
 
 .active-only-toggle input {

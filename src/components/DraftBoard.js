@@ -5,11 +5,21 @@ import './DraftBoard.css';
 
 const DEFAULT_POSITIONS = ['C', '1B', '2B', 'SS', '3B', 'LF', 'CF', 'RF', 'DH', 'BEN'];
 
-// Map MLB primary positions to our roster positions
+// Map MLB primary position codes to our roster positions
+// MLB API returns numeric codes: 2=C, 3=1B, 4=2B, 5=3B, 6=SS, 7=LF, 8=CF, 9=RF, 10=DH
 const MLB_POSITION_MAP = {
+  '2': 'C', '3': '1B', '4': '2B', '5': '3B', '6': 'SS',
+  '7': 'LF', '8': 'CF', '9': 'RF', '10': 'DH',
+  'O': 'LF', 'Y': 'DH',
+  // Also support letter codes in case they appear
   'C': 'C', '1B': '1B', '2B': '2B', '3B': '3B', 'SS': 'SS',
-  'LF': 'LF', 'CF': 'CF', 'RF': 'RF', 'DH': 'DH', 'OF': 'LF',
-  'IF': 'SS', 'UT': 'DH', 'Y': 'DH' // Ohtani's position code
+  'LF': 'LF', 'CF': 'CF', 'RF': 'RF', 'DH': 'DH', 'OF': 'LF'
+};
+
+// Human-readable position labels for display
+const POSITION_LABELS = {
+  '2': 'C', '3': '1B', '4': '2B', '5': '3B', '6': 'SS',
+  '7': 'LF', '8': 'CF', '9': 'RF', '10': 'DH', 'O': 'OF', 'Y': 'TWP'
 };
 
 const DraftBoard = ({ seasonId }) => {
@@ -234,7 +244,7 @@ const DraftBoard = ({ seasonId }) => {
                 <div className="selected-player-bar">
                   <span className="selected-label">Player:</span>
                   <span className="selected-name">{selectedPlayer.name}</span>
-                  <span className="selected-pos-badge">{selectedPlayer.primary_position}</span>
+                  <span className="selected-pos-badge">{POSITION_LABELS[selectedPlayer.primary_position] || selectedPlayer.primary_position}</span>
                   <button className="clear-selection" onClick={clearSelection}>x</button>
                 </div>
               ) : (
@@ -247,21 +257,20 @@ const DraftBoard = ({ seasonId }) => {
                       onChange={e => searchPlayers(e.target.value)}
                       placeholder="Type player name..."
                     />
+                    <label className="active-only-toggle">
+                      <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} />
+                      Active only
+                    </label>
                   </div>
                 </div>
               )}
-
-              <label className="active-only-toggle">
-                <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} />
-                Active roster only
-              </label>
 
               {searchResults.length > 0 && (
                 <div className="search-results">
                   {searchResults.map(player => (
                     <div key={player.id} className="search-result" onClick={() => selectPlayer(player)}>
                       <span className="result-name">{player.name}</span>
-                      <span className="result-pos">{player.primary_position}</span>
+                      <span className="result-pos">{POSITION_LABELS[player.primary_position] || player.primary_position}</span>
                       {player.status !== 'Active' && <span className="result-inactive">{player.status}</span>}
                     </div>
                   ))}
@@ -300,9 +309,12 @@ const DraftBoard = ({ seasonId }) => {
                   : 'Select player and position'}
               </button>
 
-              <button className="undo-button" onClick={undoPick}>Undo Last Pick</button>
             </>
           )}
+
+          <div className="draft-controls-footer">
+            <button className="undo-button" onClick={undoPick}>Undo Last Pick</button>
+          </div>
 
           {editingPick && (
             <div className="edit-position-bar">
