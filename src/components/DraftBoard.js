@@ -33,8 +33,8 @@ const DraftBoard = ({ seasonId }) => {
   const [message, setMessage] = useState('');
   const [editingPick, setEditingPick] = useState(null);
   const [activeOnly, setActiveOnly] = useState(true);
-  const [filledPositions, setFilledPositions] = useState([]);
-  const [rosterPositions, setRosterPositions] = useState(DEFAULT_POSITIONS);
+  const [filledPositions, setFilledPositions] = useState({}); // { 'C': 1, 'LF': 1, ... }
+  const [rosterTemplate, setRosterTemplate] = useState({}); // { 'C': 1, 'BEN': 2, ... }
 
   const isCommissioner = user?.commissionerLeagueIds?.length > 0;
 
@@ -55,23 +55,21 @@ const DraftBoard = ({ seasonId }) => {
         const filledRes = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/draft/${response.data.draft.id}/filled-positions/${response.data.on_the_clock.team_id}`
         );
-        setFilledPositions(filledRes.data);
+        // Build count dict: { 'C': 1, 'LF': 2, ... }
+        const counts = {};
+        filledRes.data.forEach(pos => { counts[pos] = (counts[pos] || 0) + 1; });
+        setFilledPositions(counts);
       }
 
-      // Load roster template positions for this season
-      try {
-        const templatesRes = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/admin/seasons/${seasonId}/roster-templates`
-        );
-        if (templatesRes.data.length > 0) {
-          // Expand templates: if BEN has count 2, we want ['BEN', 'BEN']
-          const positions = [];
-          templatesRes.data.forEach(t => {
-            if (t.count > 0) positions.push(t.position);
-          });
-          setRosterPositions(positions.length > 0 ? positions : DEFAULT_POSITIONS);
-        }
-      } catch {} // Ignore if templates endpoint needs auth
+      // Load roster template as a dict (public endpoint, no auth needed)
+      const templatesRes = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/leagues/seasons/${seasonId}/roster-template`
+      );
+      if (templatesRes.data.length > 0) {
+        const template = {};
+        templatesRes.data.forEach(t => { if (t.count > 0) template[t.position] = t.count; });
+        setRosterTemplate(template);
+      }
 
       setLoading(false);
     } catch (err) {
@@ -107,11 +105,15 @@ const DraftBoard = ({ seasonId }) => {
     setSearchQuery('');
     setSearchResults([]);
 
-    // Auto-populate position from player's primary position if not already set
+    // Auto-populate position: primary pos → DH → BEN → nothing
     if (!selectedPosition) {
       const mapped = MLB_POSITION_MAP[player.primary_position];
-      if (mapped && rosterPositions.includes(mapped) && !isPositionFilled(mapped)) {
+      if (mapped && rosterPositionKeys.includes(mapped) && !isPositionFilled(mapped)) {
         setSelectedPosition(mapped);
+      } else if (rosterPositionKeys.includes('DH') && !isPositionFilled('DH')) {
+        setSelectedPosition('DH');
+      } else if (rosterPositionKeys.includes('BEN') && !isPositionFilled('BEN')) {
+        setSelectedPosition('BEN');
       }
     }
   };
@@ -123,12 +125,30 @@ const DraftBoard = ({ seasonId }) => {
     setSearchResults([]);
   };
 
-  const isPositionFilled = (pos) => {
-    // Count how many times this position appears in filled vs template
-    const filledCount = filledPositions.filter(p => p === pos).length;
-    const templateEntry = rosterPositions.filter(p => p === pos).length;
-    return filledCount >= templateEntry;
+  const getFilledCount = (pos) => {
+    // Use filledPositions from API, but also check draftData picks as fallback
+    // This handles the case where filledPositions hasn't refreshed yet
+    if (Object.keys(filledPositions).length > 0) {
+      return filledPositions[pos] || 0;
+    }
+    // Fallback: count from picks data for the on-the-clock team
+    if (draftData?.picks && draftData?.on_the_clock) {
+      return draftData.picks.filter(
+        p => p.team_id === draftData.on_the_clock.team_id && p.position === pos && p.player_id
+      ).length;
+    }
+    return 0;
   };
+
+  const isPositionFilled = (pos) => {
+    const filled = getFilledCount(pos);
+    const slots = rosterTemplate[pos] || 0;
+    return filled >= slots;
+  };
+
+  const rosterPositionKeys = Object.keys(rosterTemplate).length > 0
+    ? Object.keys(rosterTemplate)
+    : DEFAULT_POSITIONS;
 
   const confirmPick = async () => {
     if (!selectedPlayer) {
@@ -239,6 +259,11 @@ const DraftBoard = ({ seasonId }) => {
             <>
               <h3>Make Pick</h3>
 
+              <label className="active-only-toggle">
+                <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} />
+                Active roster only
+              </label>
+
               {/* Selected player display */}
               {selectedPlayer ? (
                 <div className="selected-player-bar">
@@ -248,41 +273,40 @@ const DraftBoard = ({ seasonId }) => {
                   <button className="clear-selection" onClick={clearSelection}>x</button>
                 </div>
               ) : (
-                <div className="pick-controls">
-                  <div className="player-search">
-                    <label>Search Player:</label>
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={e => searchPlayers(e.target.value)}
-                      placeholder="Type player name..."
-                    />
-                    <label className="active-only-toggle">
-                      <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} />
-                      Active only
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {searchResults.length > 0 && (
-                <div className="search-results">
-                  {searchResults.map(player => (
-                    <div key={player.id} className="search-result" onClick={() => selectPlayer(player)}>
-                      <span className="result-name">{player.name}</span>
-                      <span className="result-pos">{POSITION_LABELS[player.primary_position] || player.primary_position}</span>
-                      {player.status !== 'Active' && <span className="result-inactive">{player.status}</span>}
+                <>
+                  <div className="pick-controls">
+                    <div className="player-search">
+                      <label>Search Player:</label>
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={e => searchPlayers(e.target.value)}
+                        placeholder="Type player name..."
+                      />
                     </div>
-                  ))}
-                </div>
+                  </div>
+                  {searchResults.length > 0 && (
+                    <div className="search-results">
+                      {searchResults.map(player => (
+                        <div key={player.id} className="search-result" onClick={() => selectPlayer(player)}>
+                          <span className="result-name">{player.name}</span>
+                          <span className="result-pos">{POSITION_LABELS[player.primary_position] || player.primary_position}</span>
+                          {player.status !== 'Active' && <span className="result-inactive">{player.status}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Position selector */}
               <div className="position-selector">
                 <label>Position:</label>
                 <div className="position-buttons">
-                  {[...new Set(rosterPositions)].map(pos => {
+                  {rosterPositionKeys.map(pos => {
                     const filled = isPositionFilled(pos);
+                    const filledCount = getFilledCount(pos);
+                    const totalSlots = rosterTemplate[pos] || 0;
                     return (
                       <button
                         key={pos}
@@ -291,7 +315,8 @@ const DraftBoard = ({ seasonId }) => {
                         disabled={filled}
                       >
                         {pos}
-                        {filled && <span className="filled-check">✓</span>}
+                        {totalSlots > 1 && <span className="slot-count">{filledCount}/{totalSlots}</span>}
+                        {filled && totalSlots <= 1 && <span className="filled-check">✓</span>}
                       </button>
                     );
                   })}
@@ -322,7 +347,7 @@ const DraftBoard = ({ seasonId }) => {
                 Edit pick #{editingPick.pick_number}: {editingPick.current_player_name} ({editingPick.current_position})
               </span>
               <div className="edit-position-buttons">
-                {[...new Set(rosterPositions)].map(pos => (
+                {rosterPositionKeys.map(pos => (
                   <button
                     key={pos}
                     className={`edit-pos-btn ${pos === editingPick.current_position ? 'current' : ''}`}
