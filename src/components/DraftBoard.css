@@ -68,6 +68,22 @@
   100% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.3); }
 }
 
+.end-draft-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: #000;
+  background: linear-gradient(45deg, #ffff00, #ffcc00);
+  padding: 8px 20px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.55rem;
+  text-decoration: none;
+}
+
+.end-draft-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(255, 255, 0, 0.4);
+}
+
 .clock-team {
   color: #ffff00;
   margin-left: 10px;
@@ -297,6 +313,29 @@
   background: #333;
   color: #666;
   cursor: not-allowed;
+}
+
+.search-filters {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.position-filter {
+  padding: 6px 8px;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  color: #19b8ff;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.45rem;
+  cursor: pointer;
+}
+
+.position-filter:focus {
+  outline: none;
+  border-color: #19b8ff;
 }
 
 .active-only-toggle {

@@ -33,6 +33,7 @@ const DraftBoard = ({ seasonId }) => {
   const [message, setMessage] = useState('');
   const [editingPick, setEditingPick] = useState(null);
   const [activeOnly, setActiveOnly] = useState(true);
+  const [positionFilter, setPositionFilter] = useState('');
   const [filledPositions, setFilledPositions] = useState({}); // { 'C': 1, 'LF': 1, ... }
   const [rosterTemplate, setRosterTemplate] = useState({}); // { 'C': 1, 'BEN': 2, ... }
 
@@ -91,9 +92,11 @@ const DraftBoard = ({ seasonId }) => {
       return;
     }
     try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/available?q=${encodeURIComponent(query)}&active_only=${activeOnly}`
-      );
+      let url = `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/available?q=${encodeURIComponent(query)}&active_only=${activeOnly}`;
+      if (positionFilter) {
+        url += `&position=${positionFilter}`;
+      }
+      const response = await axios.get(url);
       setSearchResults(response.data);
     } catch (err) {
       console.error('Error searching players:', err);
@@ -247,7 +250,12 @@ const DraftBoard = ({ seasonId }) => {
             <span className="clock-pick">Pick #{on_the_clock.pick_number} (Round {on_the_clock.round}) — {picksMade}/{draft.total_picks} picks made</span>
           </>
         )}
-        {draft.status === 'complete' && `DRAFT COMPLETE — ${picksMade} picks`}
+        {draft.status === 'complete' && (
+          <>
+            DRAFT COMPLETE — {picksMade} picks
+            <a href="/" className="end-draft-link">Back to Home</a>
+          </>
+        )}
       </div>
 
       {message && <div className="draft-message">{message}</div>}
@@ -259,10 +267,29 @@ const DraftBoard = ({ seasonId }) => {
             <>
               <h3>Make Pick</h3>
 
-              <label className="active-only-toggle">
-                <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} />
-                Active roster only
-              </label>
+              <div className="search-filters">
+                <label className="active-only-toggle">
+                  <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} />
+                  Active roster only
+                </label>
+                <select
+                  className="position-filter"
+                  value={positionFilter}
+                  onChange={e => { setPositionFilter(e.target.value); if (searchQuery.length >= 2) searchPlayers(searchQuery); }}
+                >
+                  <option value="">All positions</option>
+                  <option value="2">C</option>
+                  <option value="3">1B</option>
+                  <option value="4">2B</option>
+                  <option value="5">3B</option>
+                  <option value="6">SS</option>
+                  <option value="7">LF</option>
+                  <option value="8">CF</option>
+                  <option value="9">RF</option>
+                  <option value="O">OF</option>
+                  <option value="10">DH</option>
+                </select>
+              </div>
 
               {/* Selected player display */}
               {selectedPlayer ? (
@@ -384,26 +411,30 @@ const DraftBoard = ({ seasonId }) => {
             {Object.entries(picksByRound).map(([round, roundPicks]) => (
               <tr key={round}>
                 <td className="round-number">{round}</td>
-                {roundPicks.map(pick => (
-                  <td
-                    key={pick.pick_number}
-                    className={`pick-cell ${pick.player_id ? 'picked' : 'pending'} ${
-                      on_the_clock?.pick_number === pick.pick_number ? 'on-clock' : ''
-                    } ${editingPick?.pick_number === pick.pick_number ? 'editing' : ''} ${
-                      isCommissioner && pick.player_id ? 'editable' : ''
-                    }`}
-                    onClick={() => handlePickCellClick(pick)}
-                  >
-                    {pick.player_id ? (
-                      <div className="pick-info">
-                        <div className="pick-player">{pick.player_name?.split(' ').pop()}</div>
-                        <div className="pick-position">{pick.position}</div>
-                      </div>
-                    ) : (
-                      <div className="pick-empty">—</div>
-                    )}
-                  </td>
-                ))}
+                {order.map(team => {
+                  const pick = roundPicks.find(p => p.team_id === team.team_id);
+                  if (!pick) return <td key={team.team_id} className="pick-cell pending"><div className="pick-empty">—</div></td>;
+                  return (
+                    <td
+                      key={pick.pick_number}
+                      className={`pick-cell ${pick.player_id ? 'picked' : 'pending'} ${
+                        on_the_clock?.pick_number === pick.pick_number ? 'on-clock' : ''
+                      } ${editingPick?.pick_number === pick.pick_number ? 'editing' : ''} ${
+                        isCommissioner && pick.player_id ? 'editable' : ''
+                      }`}
+                      onClick={() => handlePickCellClick(pick)}
+                    >
+                      {pick.player_id ? (
+                        <div className="pick-info">
+                          <div className="pick-player">{pick.player_name?.split(' ').pop()}</div>
+                          <div className="pick-position">{pick.position}</div>
+                        </div>
+                      ) : (
+                        <div className="pick-empty">—</div>
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
