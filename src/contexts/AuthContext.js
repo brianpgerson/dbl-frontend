@@ -109,8 +109,8 @@ export const AuthProvider = ({ children }) => {
     
     // Check if user is commissioner for this team's league
     let isCommissionerForLeague = false;
-    if (teamLeagueId && user?.commissionerLeagues) {
-      isCommissionerForLeague = user.commissionerLeagues.includes(teamLeagueId);
+    if (teamLeagueId && user?.commissionerLeagueIds) {
+      isCommissionerForLeague = user.commissionerLeagueIds.includes(teamLeagueId);
     }
     
     return directlyManages || isCommissionerForLeague;

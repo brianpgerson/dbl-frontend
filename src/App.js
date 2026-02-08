@@ -25,12 +25,14 @@ function AppContent() {
   const [teams, setTeams] = useState([]);
   const [timeInterval, setTimeInterval] = useState('full');
   const [showFromZero, setShowFromZero] = useState(false);
+  const [draftActive, setDraftActive] = useState(false);
+  const [draftSeasonId, setDraftSeasonId] = useState(null);
 
   const navigate = useNavigate();
   const { teamId } = useParams();
   const { user: authUser } = useAuth();
   const isMobile = useIsMobile();
-  const isCommissioner = authUser?.commissionerLeagues?.length > 0;
+  const isCommissioner = authUser?.commissionerLeagueIds?.length > 0;
 
   const selectedTeam = teamId ? teams.find(t => t.id === parseInt(teamId, 10)) : null;
 
@@ -52,6 +54,18 @@ function AppContent() {
     axios.get(`${process.env.REACT_APP_API_URL}/api/teams`)
       .then(response => {
         setTeams(response.data);
+        // Check if there's an active draft for this league
+        if (response.data.length > 0) {
+          const seasonId = response.data[0].season_id;
+          axios.get(`${process.env.REACT_APP_API_URL}/api/draft/season/${seasonId}`)
+            .then(draftRes => {
+              if (draftRes.data.draft?.status === 'active') {
+                setDraftActive(true);
+                setDraftSeasonId(seasonId);
+              }
+            })
+            .catch(() => {});
+        }
       })
       .catch(error => {
         console.error('Error fetching teams:', error);
@@ -118,7 +132,12 @@ function AppContent() {
           </div>
         </header>
 
-        {selectedTeam ? (
+        {draftActive ? (
+          <div className="draft-live-banner">
+            <h3>The Draft Is Live!</h3>
+            <a href={`/draft/${draftSeasonId}`} className="draft-live-link">Go to Draft Board</a>
+          </div>
+        ) : selectedTeam ? (
           <TeamRoster team={selectedTeam} />
         ) : (
           <>
@@ -264,7 +283,7 @@ function AdminPage() {
 }
 
 function DraftPage() {
-  const { leagueId } = useParams();
+  const { seasonId } = useParams();
   return (
     <>
       <div className="star-field"></div>
@@ -281,7 +300,7 @@ function DraftPage() {
             </nav>
           </div>
         </header>
-        <DraftBoard leagueId={leagueId} />
+        <DraftBoard seasonId={seasonId} />
       </div>
     </>
   );
@@ -295,7 +314,7 @@ function App() {
         <Route path="/team/:teamId" element={<AppContent />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/draft/:leagueId" element={<DraftPage />} />
+        <Route path="/draft/:seasonId" element={<DraftPage />} />
       </Routes>
     </BrowserRouter>
   );

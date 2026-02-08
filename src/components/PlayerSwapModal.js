@@ -108,8 +108,8 @@ const PlayerSwapModal = ({ team, roster, selectedPlayer, onClose, onSuccess }) =
   };
 
 
-  // Check if user is commissioner (has commissionerLeagues)
-  const isCommissioner = user?.commissionerLeagues?.length > 0;
+  // Check if user is commissioner (has commissionerLeagueIds)
+  const isCommissioner = user?.commissionerLeagueIds?.length > 0;
 
   return (
     <>

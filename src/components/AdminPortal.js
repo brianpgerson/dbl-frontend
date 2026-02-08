@@ -6,10 +6,14 @@ import './AdminPortal.css';
 const AdminPortal = () => {
   const { user } = useAuth();
   const [leagues, setLeagues] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [users, setUsers] = useState([]);
+  const [draftStatus, setDraftStatus] = useState(null); // null, 'setup', 'active', 'complete'
+  const [draftData, setDraftData] = useState(null);
+  const [activeLeague, setActiveLeague] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('season');
+  const [activeTab, setActiveTab] = useState('settings');
 
   // New season form
   const [newSeason, setNewSeason] = useState({
@@ -17,18 +21,13 @@ const AdminPortal = () => {
     season_year: new Date().getFullYear(),
     start_date: '',
     end_date: '',
-    source_league_id: ''
+    source_season_id: ''
   });
 
   // New user form
   const [newUser, setNewUser] = useState({ email: '', password: '' });
 
-  // New team form
-  const [newTeam, setNewTeam] = useState({ league_id: '', name: '', manager_name: '' });
-
   // Draft setup
-  const [draftLeagueId, setDraftLeagueId] = useState('');
-  const [draftTeams, setDraftTeams] = useState([]);
   const [draftOrder, setDraftOrder] = useState([]);
 
   useEffect(() => {
@@ -37,15 +36,39 @@ const AdminPortal = () => {
 
   const loadData = async () => {
     try {
-      const [leaguesRes, usersRes] = await Promise.all([
+      const [seasonsRes, leaguesRes, usersRes] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_API_URL}/api/leagues/seasons`),
         axios.get(`${process.env.REACT_APP_API_URL}/api/leagues`),
         axios.get(`${process.env.REACT_APP_API_URL}/api/admin/users`)
       ]);
       setLeagues(leaguesRes.data);
+      setSeasons(seasonsRes.data);
       setUsers(usersRes.data);
-      if (leaguesRes.data.length > 0) {
-        setNewSeason(prev => ({ ...prev, source_league_id: leaguesRes.data[0].id }));
+
+      // Active season = most recent
+      const seasons = seasonsRes.data;
+      const activeSeason = seasons[0] || null;
+      setActiveLeague(activeSeason); // reusing state name for now
+
+      if (seasons.length > 0) {
+        setNewSeason(prev => ({ ...prev, source_season_id: seasons[0].id, league_id: seasons[0].league_id }));
       }
+
+      // Check draft status for active season
+      if (activeSeason) {
+        const draftRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/draft/season/${activeSeason.id}`);
+        setDraftData(draftRes.data);
+        setDraftStatus(draftRes.data.draft?.status || null);
+
+        // Pre-load draft order for preseason
+        if (!draftRes.data.draft || draftRes.data.draft.status === 'setup') {
+          const teamsRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/teams?season_id=${activeSeason.id}`);
+          setDraftOrder(teamsRes.data.map((t, i) => ({
+            team_id: t.id, order_position: i + 1, name: t.name, manager_name: t.manager_name
+          })));
+        }
+      }
+
       setLoading(false);
     } catch (err) {
       console.error('Error loading admin data:', err);
@@ -58,13 +81,21 @@ const AdminPortal = () => {
     setTimeout(() => setMessage(''), 5000);
   };
 
+  // Determine the portal state
+  const getPortalState = () => {
+    if (!draftStatus || draftStatus === 'setup') return 'preseason';
+    if (draftStatus === 'active') return 'draft';
+    return 'season'; // complete
+  };
+
+  const portalState = getPortalState();
+
+  // ---- PRESEASON HANDLERS ----
+
   const handleNewSeason = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/admin/new-season`,
-        newSeason
-      );
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/new-season`, newSeason);
       showMessage(response.data.message);
       loadData();
     } catch (err) {
@@ -84,29 +115,6 @@ const AdminPortal = () => {
     }
   };
 
-  const handleCreateTeam = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/teams`, newTeam);
-      showMessage(`Team "${newTeam.name}" created`);
-      setNewTeam({ league_id: newTeam.league_id, name: '', manager_name: '' });
-    } catch (err) {
-      showMessage(`Error: ${err.response?.data?.error || err.message}`);
-    }
-  };
-
-  const loadDraftTeams = async (leagueId) => {
-    setDraftLeagueId(leagueId);
-    if (!leagueId) return;
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/teams?league_id=${leagueId}`);
-      setDraftTeams(response.data);
-      setDraftOrder(response.data.map((t, i) => ({ team_id: t.id, order_position: i + 1, name: t.name, manager_name: t.manager_name })));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const moveDraftOrder = (index, direction) => {
     const newOrder = [...draftOrder];
     const swapIndex = index + direction;
@@ -116,51 +124,57 @@ const AdminPortal = () => {
     setDraftOrder(newOrder);
   };
 
-  const handleCreateDraft = async () => {
-    if (!draftLeagueId || draftOrder.length === 0) {
-      showMessage('Select a league and set the draft order first');
+  const handleStartDraft = async () => {
+    if (!activeLeague || draftOrder.length === 0) {
+      showMessage('No league or teams found');
       return;
     }
     try {
-      // Create draft
       const draftRes = await axios.post(`${process.env.REACT_APP_API_URL}/api/draft`, {
-        league_id: draftLeagueId,
-        draft_type: 'snake',
-        rounds: 11
+        season_id: activeLeague.id, draft_type: 'snake', rounds: 11
       });
-      const draftId = draftRes.data.draft.id;
-
-      // Set order
-      const orderRes = await axios.post(`${process.env.REACT_APP_API_URL}/api/draft/${draftId}/order`, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/draft/${draftRes.data.draft.id}/order`, {
         order: draftOrder.map(t => ({ team_id: t.team_id, order_position: t.order_position }))
       });
-
-      showMessage(`Draft created! ${orderRes.data.message}`);
-    } catch (err) {
-      showMessage(`Error: ${err.response?.data?.error || err.message}`);
-    }
-  };
-
-  const handleStartDraft = async () => {
-    try {
-      // Get existing draft for the league
-      const draftRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/draft/league/${draftLeagueId}`);
-      if (!draftRes.data.draft) {
-        showMessage('No draft found. Create one first.');
-        return;
-      }
       await axios.post(`${process.env.REACT_APP_API_URL}/api/draft/${draftRes.data.draft.id}/start`);
-      showMessage('Draft started! Go to the draft board to make picks.');
+      window.location.href = `/draft/${activeLeague.id}`;
     } catch (err) {
       showMessage(`Error: ${err.response?.data?.error || err.message}`);
     }
   };
 
-  if (!user?.commissionerLeagues?.length) {
+  // ---- DRAFT HANDLERS ----
+
+  const handleCancelDraft = async () => {
+    if (!draftData?.draft?.id) return;
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}`);
+      showMessage('Draft cancelled and reset');
+      loadData();
+    } catch (err) {
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  // ---- SEASON HANDLERS ----
+
+  const handleSyncHRs = async () => {
+    try {
+      showMessage('Syncing HR data...');
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/draft/sync-hrs`);
+      showMessage(response.data.message);
+    } catch (err) {
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  // ---- RENDER ----
+
+  if (!user?.commissionerLeagueIds?.length) {
     return (
       <div className="admin-portal">
         <h2>Commissioner Access Required</h2>
-        <p>You must be logged in as a commissioner to access this page.</p>
+        <p className="draft-hint">You must be logged in as a commissioner to access this page.</p>
       </div>
     );
   }
@@ -172,238 +186,162 @@ const AdminPortal = () => {
   return (
     <div className="admin-portal">
       <h2>Commissioner Portal</h2>
+      <div className="portal-state-badge">
+        {portalState === 'preseason' && <span className="state-preseason">Preseason</span>}
+        {portalState === 'draft' && <span className="state-draft">Draft Active</span>}
+        {portalState === 'season' && <span className="state-season">{activeLeague?.season_year} Season</span>}
+      </div>
 
       {message && <div className="admin-message">{message}</div>}
 
-      <div className="admin-tabs">
-        <button className={activeTab === 'season' ? 'active' : ''} onClick={() => setActiveTab('season')}>
-          New Season
-        </button>
-        <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>
-          Users
-        </button>
-        <button className={activeTab === 'teams' ? 'active' : ''} onClick={() => setActiveTab('teams')}>
-          Teams
-        </button>
-        <button className={activeTab === 'draft' ? 'active' : ''} onClick={() => setActiveTab('draft')}>
-          Draft
-        </button>
-      </div>
-
-      {activeTab === 'season' && (
-        <div className="admin-section">
-          <h3>Create New Season</h3>
-          <p className="admin-hint">This will create a new league, clone teams and roster templates from a previous season, and reassign users.</p>
-          <form onSubmit={handleNewSeason} className="admin-form">
-            <div className="form-row">
-              <label>League Name</label>
-              <input
-                type="text"
-                value={newSeason.name}
-                onChange={e => setNewSeason({ ...newSeason, name: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label>Season Year</label>
-              <input
-                type="number"
-                value={newSeason.season_year}
-                onChange={e => setNewSeason({ ...newSeason, season_year: parseInt(e.target.value, 10) })}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label>Start Date</label>
-              <input
-                type="date"
-                value={newSeason.start_date}
-                onChange={e => setNewSeason({ ...newSeason, start_date: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label>End Date</label>
-              <input
-                type="date"
-                value={newSeason.end_date}
-                onChange={e => setNewSeason({ ...newSeason, end_date: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label>Copy From Season</label>
-              <select
-                value={newSeason.source_league_id}
-                onChange={e => setNewSeason({ ...newSeason, source_league_id: e.target.value })}
-              >
-                <option value="">Start Fresh</option>
-                {leagues.map(l => (
-                  <option key={l.id} value={l.id}>{l.season_year} — {l.name}</option>
-                ))}
-              </select>
-            </div>
-            <button type="submit" className="admin-submit">Create Season</button>
-          </form>
+      {/* ============ DRAFT ACTIVE STATE ============ */}
+      {portalState === 'draft' && (
+        <div className="admin-section draft-active-section">
+          <h3>Draft In Progress</h3>
+          <p className="admin-hint">
+            {draftData?.on_the_clock
+              ? `On the clock: ${draftData.on_the_clock.manager_name}'s ${draftData.on_the_clock.team_name} (Pick #${draftData.on_the_clock.pick_number})`
+              : 'Draft is active'}
+          </p>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <a href={`/draft/${activeLeague.id}`} className="admin-submit" style={{ textDecoration: 'none', textAlign: 'center' }}>
+              Go to Draft Board
+            </a>
+            <button className="admin-cancel" onClick={handleCancelDraft}>
+              Cancel Draft
+            </button>
+          </div>
         </div>
       )}
 
-      {activeTab === 'users' && (
-        <div className="admin-section">
-          <h3>User Management</h3>
-
-          <div className="admin-list">
-            <h4>Existing Users</h4>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(u => (
-                  <tr key={u.id}>
-                    <td>{u.email}</td>
-                    <td>
-                      {u.assignments?.[0]?.role !== null
-                        ? u.assignments.map(a => a.role).filter(Boolean).join(', ')
-                        : 'unassigned'}
-                    </td>
-                    <td>{new Date(u.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* ============ PRESEASON STATE ============ */}
+      {portalState === 'preseason' && (
+        <>
+          <div className="admin-tabs">
+            <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}>
+              Season Setup
+            </button>
+            <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>
+              Users
+            </button>
+            <button className={activeTab === 'draft' ? 'active' : ''} onClick={() => setActiveTab('draft')}>
+              Start Draft
+            </button>
           </div>
 
-          <h4>Create New User</h4>
-          <form onSubmit={handleCreateUser} className="admin-form">
-            <div className="form-row">
-              <label>Email</label>
-              <input
-                type="email"
-                value={newUser.email}
-                onChange={e => setNewUser({ ...newUser, email: e.target.value })}
-                required
-              />
+          {activeTab === 'settings' && (
+            <div className="admin-section">
+              <h3>Create New Season</h3>
+              <p className="admin-hint">Creates a new league, clones teams and roster templates from a previous season, and reassigns users.</p>
+              <form onSubmit={handleNewSeason} className="admin-form">
+                <div className="form-row">
+                  <label>League Name</label>
+                  <input type="text" value={newSeason.name} onChange={e => setNewSeason({ ...newSeason, name: e.target.value })} required />
+                </div>
+                <div className="form-row">
+                  <label>Season Year</label>
+                  <input type="number" value={newSeason.season_year} onChange={e => setNewSeason({ ...newSeason, season_year: parseInt(e.target.value, 10) })} required />
+                </div>
+                <div className="form-row">
+                  <label>Start Date</label>
+                  <input type="date" value={newSeason.start_date} onChange={e => setNewSeason({ ...newSeason, start_date: e.target.value })} required />
+                </div>
+                <div className="form-row">
+                  <label>End Date</label>
+                  <input type="date" value={newSeason.end_date} onChange={e => setNewSeason({ ...newSeason, end_date: e.target.value })} required />
+                </div>
+                <div className="form-row">
+                  <label>Copy From Season</label>
+                  <select value={newSeason.source_season_id} onChange={e => setNewSeason({ ...newSeason, source_season_id: e.target.value })}>
+                    <option value="">Start Fresh</option>
+                    {seasons.map(s => (
+                      <option key={s.id} value={s.id}>{s.season_year} — {s.league_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <button type="submit" className="admin-submit">Create Season</button>
+              </form>
             </div>
-            <div className="form-row">
-              <label>Password</label>
-              <input
-                type="text"
-                value={newUser.password}
-                onChange={e => setNewUser({ ...newUser, password: e.target.value })}
-                required
-              />
-            </div>
-            <button type="submit" className="admin-submit">Create User</button>
-          </form>
-        </div>
-      )}
-
-      {activeTab === 'teams' && (
-        <div className="admin-section">
-          <h3>Team Management</h3>
-
-          <div className="admin-list">
-            <h4>Teams by Season</h4>
-            {leagues.map(league => (
-              <div key={league.id} className="league-teams">
-                <h5>{league.season_year} Season</h5>
-                <ul>
-                  {/* Teams will be loaded when we have a teams-by-league endpoint */}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <h4>Create New Team</h4>
-          <form onSubmit={handleCreateTeam} className="admin-form">
-            <div className="form-row">
-              <label>League</label>
-              <select
-                value={newTeam.league_id}
-                onChange={e => setNewTeam({ ...newTeam, league_id: e.target.value })}
-                required
-              >
-                <option value="">Select League</option>
-                {leagues.map(l => (
-                  <option key={l.id} value={l.id}>{l.season_year} — {l.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-row">
-              <label>Team Name</label>
-              <input
-                type="text"
-                value={newTeam.name}
-                onChange={e => setNewTeam({ ...newTeam, name: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label>Manager Name</label>
-              <input
-                type="text"
-                value={newTeam.manager_name}
-                onChange={e => setNewTeam({ ...newTeam, manager_name: e.target.value })}
-                required
-              />
-            </div>
-            <button type="submit" className="admin-submit">Create Team</button>
-          </form>
-        </div>
-      )}
-
-      {activeTab === 'draft' && (
-        <div className="admin-section">
-          <h3>Draft Setup</h3>
-
-          <div className="form-row">
-            <label>League</label>
-            <select value={draftLeagueId} onChange={e => loadDraftTeams(e.target.value)}>
-              <option value="">Select League</option>
-              {leagues.map(l => (
-                <option key={l.id} value={l.id}>{l.season_year} — {l.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {draftOrder.length > 0 && (
-            <>
-              <h4>Draft Order (drag to reorder)</h4>
-              <div className="draft-order-list">
-                {draftOrder.map((team, index) => (
-                  <div key={team.team_id} className="draft-order-item">
-                    <span className="order-number">{index + 1}.</span>
-                    <span className="order-team">{team.manager_name}'s {team.name}</span>
-                    <div className="order-buttons">
-                      <button onClick={() => moveDraftOrder(index, -1)} disabled={index === 0}>↑</button>
-                      <button onClick={() => moveDraftOrder(index, 1)} disabled={index === draftOrder.length - 1}>↓</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                <button className="admin-submit" onClick={handleCreateDraft}>
-                  Create Draft
-                </button>
-                <button className="admin-submit" onClick={handleStartDraft}>
-                  Start Draft
-                </button>
-                <a
-                  href={`/draft/${draftLeagueId}`}
-                  className="admin-submit"
-                  style={{ display: 'inline-block', textDecoration: 'none', textAlign: 'center' }}
-                >
-                  Go to Draft Board →
-                </a>
-              </div>
-            </>
           )}
+
+          {activeTab === 'users' && (
+            <div className="admin-section">
+              <h3>User Management</h3>
+              <table className="admin-table">
+                <thead>
+                  <tr><th>Email</th><th>Role</th></tr>
+                </thead>
+                <tbody>
+                  {users.map(u => (
+                    <tr key={u.id}>
+                      <td>{u.email}</td>
+                      <td>{u.assignments?.[0]?.role !== null ? u.assignments.map(a => a.role).filter(Boolean).join(', ') : 'unassigned'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <h4>Create New User</h4>
+              <form onSubmit={handleCreateUser} className="admin-form">
+                <div className="form-row">
+                  <label>Email</label>
+                  <input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} required />
+                </div>
+                <div className="form-row">
+                  <label>Password</label>
+                  <input type="text" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} required />
+                </div>
+                <button type="submit" className="admin-submit">Create User</button>
+              </form>
+            </div>
+          )}
+
+          {activeTab === 'draft' && (
+            <div className="admin-section">
+              <h3>Draft Setup — {activeLeague?.season_year} Season</h3>
+
+              {draftOrder.length > 0 ? (
+                <>
+                  <h4>Set Draft Order</h4>
+                  <div className="draft-order-list">
+                    {draftOrder.map((team, index) => (
+                      <div key={team.team_id} className="draft-order-item">
+                        <span className="order-number">{index + 1}.</span>
+                        <span className="order-team">{team.manager_name}'s {team.name}</span>
+                        <div className="order-buttons">
+                          <button onClick={() => moveDraftOrder(index, -1)} disabled={index === 0}>↑</button>
+                          <button onClick={() => moveDraftOrder(index, 1)} disabled={index === draftOrder.length - 1}>↓</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="admin-submit" onClick={handleStartDraft} style={{ marginTop: '15px' }}>
+                    Start Draft
+                  </button>
+                </>
+              ) : (
+                <p className="admin-hint">No teams found for this league. Create a season first.</p>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ============ SEASON STATE ============ */}
+      {portalState === 'season' && (
+        <div className="admin-section">
+          <h3>{activeLeague?.season_year} Season Tools</h3>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            <button className="admin-submit" onClick={handleSyncHRs}>
+              Sync HR Data
+            </button>
+            <a href={`/draft/${activeLeague?.id}`} className="admin-submit" style={{ textDecoration: 'none', textAlign: 'center' }}>
+              View Draft Results
+            </a>
+          </div>
+
+          <p className="admin-hint">Roster swaps can be made from any team's roster page using the commissioner effective date override.</p>
         </div>
       )}
     </div>

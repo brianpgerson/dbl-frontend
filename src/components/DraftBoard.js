@@ -5,7 +5,7 @@ import './DraftBoard.css';
 
 const POSITIONS = ['C', '1B', '2B', 'SS', '3B', 'LF', 'CF', 'RF', 'DH', 'BEN'];
 
-const DraftBoard = ({ leagueId }) => {
+const DraftBoard = ({ seasonId }) => {
   const { user } = useAuth();
   const [draftData, setDraftData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ const DraftBoard = ({ leagueId }) => {
   const [message, setMessage] = useState('');
   const [editingPick, setEditingPick] = useState(null); // { pick_number, current_position }
 
-  const isCommissioner = user?.commissionerLeagues?.length > 0;
+  const isCommissioner = user?.commissionerLeagueIds?.length > 0;
 
   const showMessage = (msg) => {
     setMessage(msg);
@@ -25,7 +25,7 @@ const DraftBoard = ({ leagueId }) => {
   const loadDraft = useCallback(async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/draft/league/${leagueId}`
+        `${process.env.REACT_APP_API_URL}/api/draft/season/${seasonId}`
       );
       setDraftData(response.data);
       setLoading(false);
@@ -33,7 +33,7 @@ const DraftBoard = ({ leagueId }) => {
       console.error('Error loading draft:', err);
       setLoading(false);
     }
-  }, [leagueId]);
+  }, [seasonId]);
 
   useEffect(() => {
     loadDraft();

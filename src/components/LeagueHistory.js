@@ -3,28 +3,28 @@ import axios from 'axios';
 import './LeagueHistory.css';
 
 const LeagueHistory = () => {
-  const [leagues, setLeagues] = useState([]);
-  const [selectedLeague, setSelectedLeague] = useState(null);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState(null);
   const [standings, setStandings] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL}/api/leagues`)
+    axios.get(`${process.env.REACT_APP_API_URL}/api/leagues/seasons`)
       .then(response => {
-        setLeagues(response.data);
+        setSeasons(response.data);
         setLoading(false);
       })
       .catch(error => {
-        console.error('Error fetching leagues:', error);
+        console.error('Error fetching seasons:', error);
         setLoading(false);
       });
   }, []);
 
-  const loadStandings = async (leagueId) => {
+  const loadStandings = async (seasonId) => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/leagues/${leagueId}/standings`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/leagues/seasons/${seasonId}/standings`);
       setStandings(response.data);
-      setSelectedLeague(leagueId);
+      setSelectedSeason(seasonId);
     } catch (error) {
       console.error('Error fetching standings:', error);
     }
@@ -34,7 +34,7 @@ const LeagueHistory = () => {
     return <div className="league-history-loading">Loading league history...</div>;
   }
 
-  if (leagues.length === 0) {
+  if (seasons.length === 0) {
     return <div className="league-history-empty">No league history available yet.</div>;
   }
 
@@ -43,20 +43,20 @@ const LeagueHistory = () => {
       <h2>League History</h2>
 
       <div className="season-list">
-        {leagues.map(league => (
+        {seasons.map(season => (
           <button
-            key={league.id}
-            className={`season-button ${selectedLeague === league.id ? 'active' : ''}`}
-            onClick={() => loadStandings(league.id)}
+            key={season.id}
+            className={`season-button ${selectedSeason === season.id ? 'active' : ''}`}
+            onClick={() => loadStandings(season.id)}
           >
-            {league.season_year} Season
+            {season.season_year} Season
           </button>
         ))}
       </div>
 
       {standings && (
         <div className="standings-container">
-          <h3>{standings.league.season_year} Final Standings</h3>
+          <h3>{standings.season.season_year} Final Standings</h3>
           <table className="standings-table">
             <thead>
               <tr>
