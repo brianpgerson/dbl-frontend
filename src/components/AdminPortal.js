@@ -21,6 +21,11 @@ const AdminPortal = () => {
   // Draft setup
   const [draftOrder, setDraftOrder] = useState([]);
 
+  // Settings
+  const [rosterTemplates, setRosterTemplates] = useState([]);
+  const [leagueName, setLeagueName] = useState('');
+  const [seasonDates, setSeasonDates] = useState({ start_date: '', end_date: '' });
+
   useEffect(() => {
     loadData();
   }, []);
@@ -47,13 +52,24 @@ const AdminPortal = () => {
         setDraftData(draftRes.data);
         setDraftStatus(draftRes.data.draft?.status || null);
 
-        // Pre-load draft order for preseason
+        // Pre-load draft order and settings for preseason
         if (!draftRes.data.draft || draftRes.data.draft.status === 'setup') {
           const teamsRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/teams?season_id=${activeSeason.id}`);
           setDraftOrder(teamsRes.data.map((t, i) => ({
             team_id: t.id, order_position: i + 1, name: t.name, manager_name: t.manager_name
           })));
+
+          // Load roster templates
+          const templatesRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/seasons/${activeSeason.id}/roster-templates`);
+          setRosterTemplates(templatesRes.data);
         }
+
+        // Load season dates and league name
+        setSeasonDates({
+          start_date: activeSeason.start_date?.split('T')[0] || '',
+          end_date: activeSeason.end_date?.split('T')[0] || ''
+        });
+        setLeagueName(activeSeason.league_name || '');
       }
 
       setLoading(false);
@@ -114,6 +130,43 @@ const AdminPortal = () => {
     } catch (err) {
       showMessage(`Error: ${err.response?.data?.error || err.message}`);
     }
+  };
+
+  const handleSaveSeasonDates = async () => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/admin/seasons/${activeLeague.id}`, seasonDates);
+      showMessage('Season dates updated');
+      loadData();
+    } catch (err) {
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  const handleSaveLeagueName = async () => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/admin/leagues/${activeLeague.league_id}`, { name: leagueName });
+      showMessage('League name updated');
+      loadData();
+    } catch (err) {
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  const handleSaveRosterTemplates = async () => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/admin/seasons/${activeLeague.id}/roster-templates`, {
+        templates: rosterTemplates
+      });
+      showMessage('Roster templates updated');
+    } catch (err) {
+      showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  const updateTemplateCount = (index, newCount) => {
+    const updated = [...rosterTemplates];
+    updated[index] = { ...updated[index], count: parseInt(newCount, 10) || 0 };
+    setRosterTemplates(updated);
   };
 
   const handleCreateUser = async (e) => {
@@ -261,17 +314,57 @@ const AdminPortal = () => {
       {portalState === 'preseason' && (
         <>
           <div className="admin-tabs">
-            <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>
-              Users
+            <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}>
+              Settings
             </button>
             <button className={activeTab === 'draft' ? 'active' : ''} onClick={() => setActiveTab('draft')}>
               Start Draft
             </button>
           </div>
 
-          {activeTab === 'users' && (
+          {activeTab === 'settings' && (
             <div className="admin-section">
-              <h3>User Management</h3>
+              {/* League Name */}
+              <h3>League Name</h3>
+              <div className="settings-row">
+                <input type="text" value={leagueName} onChange={e => setLeagueName(e.target.value)} className="settings-input" />
+                <button className="admin-submit-sm" onClick={handleSaveLeagueName}>Save</button>
+              </div>
+
+              {/* Season Dates */}
+              <h3>Season Dates</h3>
+              <div className="settings-dates">
+                <div className="form-row">
+                  <label>Scoring Start</label>
+                  <input type="date" value={seasonDates.start_date} onChange={e => setSeasonDates({ ...seasonDates, start_date: e.target.value })} />
+                </div>
+                <div className="form-row">
+                  <label>Scoring End</label>
+                  <input type="date" value={seasonDates.end_date} onChange={e => setSeasonDates({ ...seasonDates, end_date: e.target.value })} />
+                </div>
+                <button className="admin-submit-sm" onClick={handleSaveSeasonDates}>Save Dates</button>
+              </div>
+
+              {/* Roster Templates */}
+              <h3>Roster Template</h3>
+              <div className="roster-template-list">
+                {rosterTemplates.map((t, i) => (
+                  <div key={t.id || i} className="roster-template-item">
+                    <span className="template-position">{t.position}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={t.count}
+                      onChange={e => updateTemplateCount(i, e.target.value)}
+                      className="template-count-input"
+                    />
+                  </div>
+                ))}
+                <button className="admin-submit-sm" onClick={handleSaveRosterTemplates} style={{ marginTop: '10px' }}>Save Template</button>
+              </div>
+
+              {/* Users */}
+              <h3>Users</h3>
               <table className="admin-table">
                 <thead>
                   <tr><th>Email</th><th>Role</th></tr>
@@ -286,7 +379,7 @@ const AdminPortal = () => {
                 </tbody>
               </table>
 
-              <h4>Create New User</h4>
+              <h4>Add User</h4>
               <form onSubmit={handleCreateUser} className="admin-form">
                 <div className="form-row">
                   <label>Email</label>
@@ -296,7 +389,7 @@ const AdminPortal = () => {
                   <label>Password</label>
                   <input type="text" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} required />
                 </div>
-                <button type="submit" className="admin-submit">Create User</button>
+                <button type="submit" className="admin-submit-sm">Add User</button>
               </form>
             </div>
           )}

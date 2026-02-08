@@ -14,6 +14,7 @@ const DraftBoard = ({ seasonId }) => {
   const [selectedPosition, setSelectedPosition] = useState('');
   const [message, setMessage] = useState('');
   const [editingPick, setEditingPick] = useState(null); // { pick_number, current_position }
+  const [activeOnly, setActiveOnly] = useState(true);
 
   const isCommissioner = user?.commissionerLeagueIds?.length > 0;
 
@@ -49,7 +50,7 @@ const DraftBoard = ({ seasonId }) => {
     }
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/available?q=${encodeURIComponent(query)}`
+        `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/available?q=${encodeURIComponent(query)}&active_only=${activeOnly}`
       );
       setSearchResults(response.data);
     } catch (err) {
@@ -184,6 +185,10 @@ const DraftBoard = ({ seasonId }) => {
                   />
                 </div>
               </div>
+              <label className="active-only-toggle">
+                <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} />
+                Active roster only
+              </label>
 
               {searchResults.length > 0 && (
                 <div className="search-results">
@@ -191,6 +196,7 @@ const DraftBoard = ({ seasonId }) => {
                     <div key={player.id} className="search-result" onClick={() => makePick(player.id)}>
                       <span className="result-name">{player.name}</span>
                       <span className="result-pos">{player.primary_position}</span>
+                      {player.status !== 'Active' && <span className="result-inactive">{player.status}</span>}
                     </div>
                   ))}
                 </div>

@@ -172,6 +172,26 @@
   margin-left: 8px;
 }
 
+.active-only-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+  font-size: 0.5rem;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.active-only-toggle input {
+  cursor: pointer;
+}
+
+.result-inactive {
+  color: #ff3333;
+  font-size: 0.45rem;
+  margin-left: 8px;
+}
+
 .undo-button {
   background: #333;
   border: 1px solid #888;

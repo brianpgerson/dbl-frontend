@@ -62,6 +62,89 @@
   100% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.3); }
 }
 
+.settings-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.settings-input {
+  flex: 1;
+  padding: 10px;
+  background: #0a0a0a;
+  border: 2px solid #333;
+  color: #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.65rem;
+  box-sizing: border-box;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: #19b8ff;
+}
+
+.settings-dates {
+  margin-bottom: 15px;
+}
+
+.settings-dates .form-row {
+  display: inline-block;
+  width: 45%;
+  margin-right: 5%;
+}
+
+.admin-submit-sm {
+  background: linear-gradient(45deg, #19b8ff, #00ffff);
+  border: none;
+  color: #000;
+  padding: 8px 16px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.55rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-submit-sm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(25, 184, 255, 0.4);
+}
+
+.roster-template-list {
+  margin-bottom: 15px;
+}
+
+.roster-template-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid #222;
+}
+
+.template-position {
+  color: #19b8ff;
+  font-size: 0.65rem;
+  min-width: 40px;
+}
+
+.template-count-input {
+  width: 60px;
+  padding: 6px;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  color: #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+  text-align: center;
+}
+
+.template-count-input:focus {
+  outline: none;
+  border-color: #19b8ff;
+}
+
 .new-season-summary {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid #333;
