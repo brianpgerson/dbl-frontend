@@ -1,0 +1,200 @@
+.big-dongos-container {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 20px 15px;
+}
+
+.big-dongos-canvas-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.big-dongos-canvas {
+  border: 1px solid rgba(25, 184, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Overlays */
+.big-dongos-overlay {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 20, 0.85);
+  z-index: 2;
+}
+
+.big-dongos-overlay-done {
+  background: rgba(10, 10, 20, 0.7);
+  justify-content: flex-end;
+  padding-bottom: 30px;
+}
+
+.big-dongos-title {
+  font-family: 'Press Start 2P', monospace;
+  color: #ff2998;
+  font-size: clamp(24px, 5vw, 42px);
+  text-shadow: 0 0 30px rgba(255, 41, 152, 0.6);
+  margin-bottom: 10px;
+}
+
+.big-dongos-subtitle {
+  font-family: 'Press Start 2P', monospace;
+  color: #19b8ff;
+  font-size: clamp(10px, 2vw, 14px);
+  margin-bottom: 30px;
+}
+
+.big-dongos-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(14px, 2.5vw, 18px);
+  background: transparent;
+  color: #39ff14;
+  border: 2px solid #39ff14;
+  padding: 12px 32px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+}
+
+.big-dongos-btn:hover {
+  background: rgba(57, 255, 20, 0.1);
+  box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+}
+
+.big-dongos-msg {
+  font-family: 'Press Start 2P', monospace;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: clamp(10px, 2vw, 13px);
+  margin-top: 15px;
+}
+
+.big-dongos-attempts {
+  font-family: 'Press Start 2P', monospace;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: clamp(8px, 1.5vw, 10px);
+  margin-top: 15px;
+}
+
+.big-dongos-saving {
+  font-family: 'Press Start 2P', monospace;
+  color: #19b8ff;
+  font-size: 12px;
+  animation: blink 1s infinite;
+}
+
+.big-dongos-best {
+  font-family: 'Press Start 2P', monospace;
+  color: #39ff14;
+  font-size: clamp(16px, 3vw, 22px);
+  text-shadow: 0 0 20px rgba(57, 255, 20, 0.5);
+  margin-bottom: 15px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Instructions */
+.big-dongos-instructions {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(25, 184, 255, 0.15);
+  border-radius: 4px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+}
+
+.big-dongos-instructions h3 {
+  font-family: 'Press Start 2P', monospace;
+  color: #19b8ff;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.big-dongos-instructions ol {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  padding-left: 20px;
+  line-height: 2.2;
+}
+
+.big-dongos-instructions strong {
+  color: #39ff14;
+}
+
+.big-dongos-tip {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: #ff6600;
+  margin-top: 10px;
+}
+
+/* Leaderboard */
+.big-dongos-leaderboard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(25, 184, 255, 0.15);
+  border-radius: 4px;
+  padding: 15px 20px;
+}
+
+.big-dongos-leaderboard h3 {
+  font-family: 'Press Start 2P', monospace;
+  color: #ff2998;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.big-dongos-leaderboard table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+}
+
+.big-dongos-leaderboard th {
+  color: #19b8ff;
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(25, 184, 255, 0.2);
+}
+
+.big-dongos-leaderboard td {
+  color: rgba(255, 255, 255, 0.6);
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.big-dongos-leaderboard .big-dongos-leader td {
+  color: #39ff14;
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.3);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .big-dongos-container {
+    padding: 10px 8px;
+  }
+
+  .big-dongos-leaderboard table {
+    font-size: 8px;
+  }
+
+  .big-dongos-leaderboard th,
+  .big-dongos-leaderboard td {
+    padding: 4px 4px;
+  }
+}

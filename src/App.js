@@ -11,6 +11,7 @@ import UserIcon from './components/UserIcon';
 import LeagueHistory from './components/LeagueHistory';
 import AdminPortal from './components/AdminPortal';
 import DraftBoard from './components/DraftBoard';
+import BigDongos from './components/BigDongos';
 import { useAuth } from './contexts/AuthContext';
 import { useLineChartData, useBarChartData } from './hooks/useChartData';
 import { useIsMobile } from './hooks/useWindowWidth';
@@ -36,6 +37,7 @@ function PageShell({ children, subtitle, activeNav }) {
             <nav className="header-nav">
               {activeNav === 'home' ? <span className="nav-active">Home</span> : <a href="/">Home</a>}
               {activeNav === 'history' ? <span className="nav-active">History</span> : <a href="/history">History</a>}
+              {activeNav === 'big-dongos' ? <span className="nav-active">Big Dongos</span> : <a href="/big-dongos">Big Dongos</a>}
               {isCommissioner && (activeNav === 'admin' ? <span className="nav-active">Admin</span> : <a href="/admin">Admin</a>)}
             </nav>
           </div>
@@ -262,6 +264,14 @@ function AdminPage() {
   );
 }
 
+function BigDongosPage() {
+  return (
+    <PageShell subtitle="Big Dongos" activeNav="big-dongos">
+      <BigDongos />
+    </PageShell>
+  );
+}
+
 function DraftPage() {
   const { seasonId } = useParams();
   return (
@@ -279,6 +289,8 @@ function App() {
         <Route path="/team/:teamId" element={<AppContent />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/big-dongos" element={<BigDongosPage />} />
+        <Route path="/big-dongos/:seasonId" element={<BigDongosPage />} />
         <Route path="/draft/:seasonId" element={<DraftPage />} />
       </Routes>
     </BrowserRouter>
