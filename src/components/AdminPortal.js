@@ -16,7 +16,7 @@ const AdminPortal = () => {
   const [activeTab, setActiveTab] = useState('settings');
 
   // New user form
-  const [newUser, setNewUser] = useState({ email: '', password: '' });
+  const [newUser, setNewUser] = useState({ email: '', password: '', team_name: '' });
 
   // Draft setup
   const [draftOrder, setDraftOrder] = useState([]);
@@ -173,8 +173,8 @@ const AdminPortal = () => {
     e.preventDefault();
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/users`, newUser);
-      showMessage(`User ${newUser.email} created`);
-      setNewUser({ email: '', password: '' });
+      showMessage(`User ${newUser.email} created${newUser.team_name ? ` with team "${newUser.team_name}"` : ''}`);
+      setNewUser({ email: '', password: '', team_name: '' });
       loadData();
     } catch (err) {
       showMessage(`Error: ${err.response?.data?.error || err.message}`);
@@ -388,6 +388,10 @@ const AdminPortal = () => {
                 <div className="form-row">
                   <label>Password</label>
                   <input type="text" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} required />
+                </div>
+                <div className="form-row">
+                  <label>Team Name</label>
+                  <input type="text" value={newUser.team_name} onChange={e => setNewUser({ ...newUser, team_name: e.target.value })} placeholder="Optional" />
                 </div>
                 <button type="submit" className="admin-submit-sm">Add User</button>
               </form>
