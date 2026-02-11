@@ -11,7 +11,9 @@ const LeagueHistory = () => {
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/leagues/seasons`)
       .then(response => {
-        setSeasons(response.data);
+        // Only show seasons whose start_date has passed
+        const past = response.data.filter(s => new Date(s.start_date) < new Date());
+        setSeasons(past);
         setLoading(false);
       })
       .catch(error => {
