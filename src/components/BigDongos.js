@@ -19,7 +19,7 @@ export default function BigDongos() {
   const [maxAttempts, setMaxAttempts] = useState(GAME.maxAttempts);
   const [resumeSwing, setResumeSwing] = useState(0); // swing to resume from
   const [leaderboard, setLeaderboard] = useState([]);
-  const [bestDistance, setBestDistance] = useState(null);
+  const [, setBestDistance] = useState(null);
   const [attemptComplete, setAttemptComplete] = useState(false);
 
   // Auto-detect season
@@ -169,7 +169,7 @@ export default function BigDongos() {
   }, []);
 
   const needsResume = resumeSwing > 0 && !attemptComplete;
-  const hasAttemptsLeft = attemptsUsed < maxAttempts;
+  // attemptsUsed < maxAttempts check is handled by alreadyPlayed
 
   return (
     <div className="big-dongos-container">

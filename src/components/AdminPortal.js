@@ -5,7 +5,7 @@ import './AdminPortal.css';
 
 const AdminPortal = () => {
   const { user } = useAuth();
-  const [leagues, setLeagues] = useState([]);
+  const [, setLeagues] = useState([]);
   const [seasons, setSeasons] = useState([]);
   const [users, setUsers] = useState([]);
   const [draftStatus, setDraftStatus] = useState(null); // null, 'setup', 'active', 'complete'
