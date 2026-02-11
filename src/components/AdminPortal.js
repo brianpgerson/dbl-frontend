@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import './AdminPortal.css';
 
 const AdminPortal = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [, setLeagues] = useState([]);
   const [seasons, setSeasons] = useState([]);
   const [users, setUsers] = useState([]);
@@ -27,8 +27,8 @@ const AdminPortal = () => {
   const [seasonDates, setSeasonDates] = useState({ start_date: '', end_date: '' });
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading) loadData();
+  }, [authLoading]);
 
   const loadData = async () => {
     try {
