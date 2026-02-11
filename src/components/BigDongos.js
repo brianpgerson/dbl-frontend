@@ -122,44 +122,47 @@ export default function BigDongos() {
   }, [seasonId, attemptNumber, isAuthenticated]);
 
   // Start game
-  const startGame = useCallback(() => {
+  const alreadyPlayed = attemptsUsed >= maxAttempts && resumeSwing === 0;
+
+  const startGame = useCallback((forcePractice) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     if (engineRef.current) engineRef.current.stop();
 
+    const isPractice = forcePractice || alreadyPlayed;
     const engine = new Engine(canvas);
+    engine.practiceMode = isPractice;
     engineRef.current = engine;
 
-    // Save each swing as it happens
-    engine.onSwingComplete = (contact, swingIndex, isWarmup) => {
-      saveSwing(contact, swingIndex, isWarmup);
-    };
+    if (!isPractice) {
+      // Save each swing as it happens (only for real attempts)
+      engine.onSwingComplete = (contact, swingIndex, isWarmup) => {
+        saveSwing(contact, swingIndex, isWarmup);
+      };
 
-    // When all 10 swings are done
-    engine.onAttemptComplete = (results) => {
-      setGameState('done');
-      setAttemptComplete(true);
+      engine.onAttemptComplete = (results) => {
+        setGameState('done');
+        setAttemptComplete(true);
 
-      // Find best real swing
-      const realResults = results.slice(GAME.warmupSwings);
-      let best = null;
-      for (const r of realResults) {
-        if (!r.isWhiff && (!best || r.distance.totalFeet > best.totalFeet)) {
-          best = r.distance;
+        const realResults = results.slice(GAME.warmupSwings);
+        let best = null;
+        for (const r of realResults) {
+          if (!r.isWhiff && (!best || r.distance.totalFeet > best.totalFeet)) {
+            best = r.distance;
+          }
         }
-      }
-      setBestDistance(best);
-      loadData(); // refresh leaderboard
-    };
+        setBestDistance(best);
+        loadData();
+      };
+    }
 
-    // Resume from where they left off (or start fresh)
     engine.start();
-    if (resumeSwing > 0) {
+    if (!isPractice && resumeSwing > 0) {
       engine.startFromSwing(resumeSwing);
     }
     setGameState('playing');
     setBestDistance(null);
-  }, [saveSwing, resumeSwing, loadData]);
+  }, [saveSwing, resumeSwing, loadData, alreadyPlayed]);
 
   useEffect(() => {
     return () => { if (engineRef.current) engineRef.current.stop(); };
@@ -182,39 +185,38 @@ export default function BigDongos() {
               <p className="big-dongos-msg">Sign in to play!</p>
             ) : !seasonId ? (
               <p className="big-dongos-msg">No active season found</p>
-            ) : !hasAttemptsLeft && !needsResume ? (
-              <p className="big-dongos-msg">Max attempts reached ({maxAttempts})</p>
-            ) : (
+            ) : alreadyPlayed ? (
               <>
-                <button className="big-dongos-btn" onClick={startGame}>
-                  {needsResume ? 'RESUME' : 'PLAY'}
+                <button className="big-dongos-btn" onClick={() => startGame(true)}>
+                  PRACTICE
                 </button>
                 <p className="big-dongos-attempts">
-                  {needsResume
-                    ? `Resuming attempt ${attemptNumber} (swing ${resumeSwing + 1}/10)`
-                    : `Attempt ${attemptNumber} of ${maxAttempts}`
-                  }
+                  You've already submitted your score
                 </p>
                 <p className="big-dongos-attempts" style={{ marginTop: 8 }}>
-                  5 warmup swings, then 5 that count
+                  Practice swings won't count
                 </p>
+              </>
+            ) : needsResume ? (
+              <>
+                <button className="big-dongos-btn" onClick={() => startGame(false)}>
+                  RESUME
+                </button>
+                <p className="big-dongos-attempts">
+                  Resuming (swing {resumeSwing + 1}/10)
+                </p>
+              </>
+            ) : (
+              <>
+                <button className="big-dongos-btn" onClick={() => startGame(false)}>
+                  PLAY
+                </button>
               </>
             )}
           </div>
         )}
 
-        {gameState === 'done' && (
-          <div className="big-dongos-overlay big-dongos-overlay-done">
-            {bestDistance && (
-              <p className="big-dongos-best">
-                Best: {bestDistance.feet}' {bestDistance.inches}"
-              </p>
-            )}
-            {!bestDistance && (
-              <p className="big-dongos-msg">No contact this round!</p>
-            )}
-          </div>
-        )}
+        {/* Done state is rendered entirely on the canvas */}
       </div>
 
       {/* How to Play */}

@@ -81,7 +81,7 @@ export const GAME = {
   warmupSwings: 5,
   realSwings: 5,
   swingsPerAttempt: 10,  // warmup + real
-  maxAttempts: 5,
+  maxAttempts: 1,
   titleHoldDuration: 0.5,
   resultHoldDuration: 2.0,
   whiffDisplayDuration: 1.2,

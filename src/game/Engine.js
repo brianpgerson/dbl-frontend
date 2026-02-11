@@ -12,12 +12,14 @@ import { GAME, CANVAS_BG, COLORS, RENDER, PITCH } from './constants';
 
 const STATE = {
   TITLE: 'title',
+  INTRO: 'intro',         // Intro text — tap to begin
   WINDUP: 'windup',
-  PITCH: 'pitch',       // Ball in flight — player can swipe anytime
+  PITCH: 'pitch',
   SWINGING: 'swinging',
   FLIGHT: 'flight',
   WHIFF: 'whiff',
   RESULT: 'result',
+  TRANSITION: 'transition', // "Now for some REAL pitches" pause
   DONE: 'done',
 };
 
@@ -54,6 +56,9 @@ export default class Engine {
       swingPauseDuration: 2.0,
     };
 
+    // Practice mode: infinite swings, no DB saves
+    this.practiceMode = false;
+
     // Callback for when all swings are done
     this.onAttemptComplete = null;
     // Callback per swing (for saving each swing to DB)
@@ -65,6 +70,9 @@ export default class Engine {
   }
 
   _swingLabel() {
+    if (this.practiceMode) {
+      return 'Practice';
+    }
     if (this._isWarmup()) {
       return `Warmup ${this.currentSwing + 1}/${GAME.warmupSwings}`;
     }
@@ -114,7 +122,19 @@ export default class Engine {
 
     switch (this.state) {
       case STATE.TITLE:
-        if (this.input.justReleased) this._startWindup();
+        if (this.input.justReleased) {
+          if (this.practiceMode) {
+            this._startWindup(); // skip intro in practice mode
+          } else {
+            this._setState(STATE.INTRO);
+          }
+        }
+        break;
+
+      case STATE.INTRO:
+        if (this.stateTime > 1.0 && this.input.justReleased) {
+          this._startWindup();
+        }
         break;
 
       case STATE.WINDUP:
@@ -173,6 +193,13 @@ export default class Engine {
         if (this.stateTime > GAME.resultHoldDuration &&
             (this.input.justReleased || this.stateTime > GAME.resultHoldDuration + 2)) {
           this._nextSwing();
+        }
+        break;
+
+      case STATE.TRANSITION:
+        // "Now for some REAL pitches" — 5 second pause
+        if (this.stateTime > 5.0) {
+          this._startWindup();
         }
         break;
 
@@ -303,6 +330,20 @@ export default class Engine {
     }
     this.currentSwing++;
 
+    // Practice mode: infinite loop, no end
+    if (this.practiceMode) {
+      this.battingScene.reset();
+      this._startWindup();
+      return;
+    }
+
+    // Transition from warmup to real swings
+    if (this.currentSwing === GAME.warmupSwings) {
+      this.battingScene.reset();
+      this._setState(STATE.TRANSITION);
+      return;
+    }
+
     if (this.currentSwing >= GAME.swingsPerAttempt) {
       this._setState(STATE.DONE);
       if (this.onAttemptComplete) this.onAttemptComplete(this.swingResults);
@@ -321,6 +362,8 @@ export default class Engine {
 
     switch (this.state) {
       case STATE.TITLE:   this._renderTitle(); break;
+      case STATE.INTRO:   this._renderIntro(); break;
+      case STATE.TRANSITION: this._renderTransition(); break;
       case STATE.WINDUP:  this.battingScene.render(this._swingLabel()); break;
       case STATE.PITCH:   this.battingScene.render(this._swingLabel()); break;
       case STATE.SWINGING:this.battingScene.render(this._swingLabel(), null, true); break;
@@ -352,8 +395,79 @@ export default class Engine {
     ctx.fillStyle = COLORS.neonBlue;
     ctx.font = `${Math.min(canvas.width * 0.03, 16)}px 'Press Start 2P', monospace`;
     ctx.globalAlpha = 0.5 + 0.5 * Math.sin(this.stateTime * 4);
-    ctx.fillText('TAP TO PLAY', cx, cy + 40);
+    const tapText = this.practiceMode ? 'TAP TO PRACTICE' : 'TAP TO PLAY';
+    ctx.fillText(tapText, cx, cy + 40);
     ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+    if (this.practiceMode) {
+      ctx.fillStyle = COLORS.dimWhite;
+      ctx.font = `${Math.min(canvas.width * 0.018, 10)}px 'Press Start 2P', monospace`;
+      ctx.fillText('Practice mode - scores won\'t count', cx, cy + 75);
+    }
+  }
+
+  _renderIntro() {
+    const { ctx, canvas } = this;
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const fs = Math.min(canvas.width * 0.02, 12);
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    ctx.fillStyle = COLORS.neonBlue;
+    ctx.font = `${fs}px 'Press Start 2P', monospace`;
+
+    const lines = [
+      "It's the Home Run Derby,",
+      "and you have 5 swings to",
+      "determine your draft order.",
+      "",
+      "Warm up for 5 swings,",
+      "then the next 5 count!",
+    ];
+    const lineH = fs * 2.2;
+    const startY = cy - (lines.length * lineH) / 2;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, cx, startY + i * lineH);
+    });
+
+    if (this.stateTime > 1.0) {
+      const alpha = 0.5 + 0.5 * Math.sin(this.stateTime * 4);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = COLORS.neonGreen;
+      ctx.font = `${Math.min(canvas.width * 0.025, 14)}px 'Press Start 2P', monospace`;
+      ctx.fillText('TAP TO BEGIN', cx, cy + 120);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  _renderTransition() {
+    const { ctx, canvas } = this;
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+
+    this.battingScene.renderField();
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    // "Now for some REAL pitches"
+    ctx.shadowColor = COLORS.neonPink; ctx.shadowBlur = 25;
+    ctx.fillStyle = COLORS.neonPink;
+    ctx.font = `bold ${Math.min(canvas.width * 0.035, 22)}px 'Press Start 2P', monospace`;
+    ctx.fillText('Warmup over!', cx, cy - 30);
+
+    ctx.shadowColor = COLORS.neonGreen; ctx.shadowBlur = 20;
+    ctx.fillStyle = COLORS.neonGreen;
+    ctx.font = `bold ${Math.min(canvas.width * 0.04, 26)}px 'Press Start 2P', monospace`;
+    ctx.fillText('Now for some', cx, cy + 20);
+    ctx.fillText('REAL pitches!', cx, cy + 55);
+    ctx.shadowBlur = 0;
+
+    // Countdown
+    const remaining = Math.ceil(5.0 - this.stateTime);
+    if (remaining > 0) {
+      ctx.fillStyle = COLORS.dimWhite;
+      ctx.font = `${Math.min(canvas.width * 0.02, 12)}px 'Press Start 2P', monospace`;
+      ctx.fillText(`${remaining}...`, cx, cy + 100);
+    }
   }
 
   _renderWhiff() {

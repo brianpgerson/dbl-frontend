@@ -313,6 +313,24 @@ export default class BattingScene {
     // Don't draw if off screen
     if (ballY > h + 30) return;
 
+    // Shadow on the ground — travels from mound to plate with the ball
+    const moundGroundY = h * RENDER.moundY + 4;
+    const plateGroundY = h * (RENDER.zoneBottom + 0.07);
+    const shadowProgress = Math.min(1.3, progress);
+    const easeP = Math.min(1, shadowProgress) * Math.min(1, shadowProgress) * (3 - 2 * Math.min(1, shadowProgress));
+    const shadowY = moundGroundY + (plateGroundY - moundGroundY) * easeP;
+    // Past the zone: shadow continues past plate
+    const pastPlateY = shadowProgress > 1 ? plateGroundY + (shadowProgress - 1) * 150 : shadowY;
+    const finalShadowY = shadowProgress <= 1 ? shadowY : pastPlateY;
+    // Shadow grows as ball gets closer (perspective)
+    const shadowRadiusX = 2 + easeP * 14;
+    const shadowRadiusY = 1 + easeP * 5;
+    const shadowAlpha = 0.05 + easeP * 0.2;
+    ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(ballX, finalShadowY, shadowRadiusX, shadowRadiusY, 0, 0, Math.PI * 2);
+    ctx.fill();
+
     // Glow
     const glow = Math.min(1, progress);
     ctx.shadowColor = COLORS.white;
