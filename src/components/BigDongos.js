@@ -100,7 +100,7 @@ export default function BigDongos() {
   }, []);
 
   // Save a single swing to DB
-  const saveSwing = useCallback(async (contact, swingIndex, isWarmup) => {
+  const saveSwing = useCallback(async (contact, swingIndex) => {
     if (!isAuthenticated || !seasonId) return;
     try {
       await axios.post(
@@ -108,7 +108,6 @@ export default function BigDongos() {
         {
           attempt_number: attemptNumber,
           swing_number: swingIndex + 1, // 1-indexed
-          is_warmup: isWarmup,
           distance_feet: contact.isWhiff ? 0 : contact.distance.feet,
           distance_inches: contact.isWhiff ? 0 : contact.distance.inches,
           exit_velocity: contact.isWhiff ? 0 : contact.exitVelocity,
@@ -140,11 +139,10 @@ export default function BigDongos() {
         saveSwing(contact, swingIndex, isWarmup);
       };
 
-      engine.onAttemptComplete = (results) => {
+      engine.onAttemptComplete = (realResults) => {
         setGameState('done');
         setAttemptComplete(true);
 
-        const realResults = results.slice(GAME.warmupSwings);
         let best = null;
         for (const r of realResults) {
           if (!r.isWhiff && (!best || r.distance.totalFeet > best.totalFeet)) {

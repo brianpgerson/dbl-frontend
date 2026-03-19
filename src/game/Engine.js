@@ -37,6 +37,7 @@ export default class Engine {
     this.animFrameId = null;
 
     this.currentSwing = 0;
+    this.resumeOffset = 0;
     this.swingResults = [];
     this.currentPitch = null;
     this.currentContact = null;
@@ -67,6 +68,12 @@ export default class Engine {
 
   _isWarmup() {
     return this.currentSwing < GAME.warmupSwings;
+  }
+
+  _realResults() {
+    // swingResults starts at resumeOffset, not 0 — adjust slice accordingly
+    const warmupInArray = Math.max(0, GAME.warmupSwings - this.resumeOffset);
+    return this.swingResults.slice(warmupInArray);
   }
 
   _swingLabel() {
@@ -299,8 +306,8 @@ export default class Engine {
     this.battingScene.setGhostBall(pitch);
     this.battingScene.triggerSwing();
 
-    // Fire per-swing callback
-    if (this.onSwingComplete) {
+    // Fire per-swing callback — whiffs are reported by _handleWhiff instead to avoid double-firing
+    if (this.onSwingComplete && !this.currentContact.isWhiff) {
       this.onSwingComplete(this.currentContact, this.currentSwing, this._isWarmup());
     }
 
@@ -346,7 +353,7 @@ export default class Engine {
 
     if (this.currentSwing >= GAME.swingsPerAttempt) {
       this._setState(STATE.DONE);
-      if (this.onAttemptComplete) this.onAttemptComplete(this.swingResults);
+      if (this.onAttemptComplete) this.onAttemptComplete(this._realResults());
     } else {
       this.battingScene.reset();
       this._startWindup();
@@ -533,9 +540,7 @@ export default class Engine {
     ctx.shadowColor = COLORS.neonPink; ctx.shadowBlur = 20; ctx.fillStyle = COLORS.neonPink;
     ctx.font = `bold ${Math.min(canvas.width * 0.045, 28)}px 'Press Start 2P', monospace`;
     ctx.fillText('RESULTS', cx, canvas.height * 0.12); ctx.shadowBlur = 0;
-    // Only show real swings (skip warmup)
-    const warmupCount = Math.min(GAME.warmupSwings, this.swingResults.length);
-    const realSwings = this.swingResults.slice(warmupCount);
+    const realSwings = this._realResults();
 
     let bestIdx = -1, bestDist = 0;
     realSwings.forEach((r, i) => {
@@ -567,11 +572,16 @@ export default class Engine {
   // Start or resume from a specific swing number (0-indexed)
   startFromSwing(swingNum) {
     this.currentSwing = swingNum || 0;
+    this.resumeOffset = swingNum || 0;
     this.swingResults = [];
     this.currentPitch = null;
     this.currentContact = null;
     this.battingScene.reset();
-    this._startWindup();
+    if (this.currentSwing === GAME.warmupSwings) {
+      this._setState(STATE.TRANSITION);
+    } else {
+      this._startWindup();
+    }
   }
 
   resetAttempt() {
