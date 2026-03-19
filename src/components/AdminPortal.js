@@ -20,6 +20,7 @@ const AdminPortal = () => {
 
   // Draft setup
   const [draftOrder, setDraftOrder] = useState([]);
+  const [startingDraft, setStartingDraft] = useState(false);
 
   // Settings
   const [rosterTemplates, setRosterTemplates] = useState([]);
@@ -55,9 +56,20 @@ const AdminPortal = () => {
         // Pre-load draft order and settings for preseason
         if (!draftRes.data.draft || draftRes.data.draft.status === 'setup') {
           const teamsRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/teams?season_id=${activeSeason.id}`);
-          setDraftOrder(teamsRes.data.map((t, i) => ({
-            team_id: t.id, order_position: i + 1, name: t.name, manager_name: t.manager_name
-          })));
+          // Preserve any in-progress reordering — append new teams rather than replace wholesale
+          setDraftOrder(prev => {
+            if (prev.length === 0) {
+              return teamsRes.data.map((t, i) => ({
+                team_id: t.id, order_position: i + 1, name: t.name, manager_name: t.manager_name
+              }));
+            }
+            const existingIds = new Set(prev.map(e => e.team_id));
+            const newTeams = teamsRes.data.filter(t => !existingIds.has(t.id));
+            const appended = newTeams.map((t, i) => ({
+              team_id: t.id, order_position: prev.length + i + 1, name: t.name, manager_name: t.manager_name
+            }));
+            return [...prev, ...appended];
+          });
 
           // Load roster templates
           const templatesRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/seasons/${activeSeason.id}/roster-templates`);
@@ -191,10 +203,12 @@ const AdminPortal = () => {
   };
 
   const handleStartDraft = async () => {
+    if (startingDraft) return;
     if (!activeLeague || draftOrder.length === 0) {
       showMessage('No league or teams found');
       return;
     }
+    setStartingDraft(true);
     try {
       const draftRes = await axios.post(`${process.env.REACT_APP_API_URL}/api/draft`, {
         season_id: activeLeague.id, draft_type: 'snake', rounds: 11
@@ -206,6 +220,7 @@ const AdminPortal = () => {
       window.location.href = `/draft/${activeLeague.id}`;
     } catch (err) {
       showMessage(`Error: ${err.response?.data?.error || err.message}`);
+      setStartingDraft(false);
     }
   };
 
@@ -417,8 +432,8 @@ const AdminPortal = () => {
                       </div>
                     ))}
                   </div>
-                  <button className="admin-submit" onClick={handleStartDraft} style={{ marginTop: '15px' }}>
-                    Start Draft
+                  <button className="admin-submit" onClick={handleStartDraft} disabled={startingDraft} style={{ marginTop: '15px' }}>
+                    {startingDraft ? 'Starting...' : 'Start Draft'}
                   </button>
                 </>
               ) : (

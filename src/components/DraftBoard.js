@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import './DraftBoard.css';
@@ -37,26 +37,35 @@ const DraftBoard = ({ seasonId }) => {
   const [filledPositions, setFilledPositions] = useState({}); // { 'C': 1, 'LF': 1, ... }
   const [rosterTemplate, setRosterTemplate] = useState({}); // { 'C': 1, 'BEN': 2, ... }
 
+  const [loadError, setLoadError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const msgTimeoutRef = useRef(null);
+  const loadSeqRef = useRef(0);
+
   const isCommissioner = user?.commissionerLeagueIds?.length > 0;
 
   const showMessage = (msg) => {
+    if (msgTimeoutRef.current) clearTimeout(msgTimeoutRef.current);
     setMessage(msg);
-    setTimeout(() => setMessage(''), 5000);
+    msgTimeoutRef.current = setTimeout(() => setMessage(''), 5000);
   };
 
   const loadDraft = useCallback(async () => {
+    const seq = ++loadSeqRef.current;
     try {
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/draft/season/${seasonId}`
       );
+      if (seq !== loadSeqRef.current) return; // stale — a newer load started
       setDraftData(response.data);
+      setLoadError(false);
 
       // Load filled positions for the team on the clock
       if (response.data.draft && response.data.on_the_clock) {
         const filledRes = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/draft/${response.data.draft.id}/filled-positions/${response.data.on_the_clock.team_id}`
         );
-        // Build count dict: { 'C': 1, 'LF': 2, ... }
+        if (seq !== loadSeqRef.current) return;
         const counts = {};
         filledRes.data.forEach(pos => { counts[pos] = (counts[pos] || 0) + 1; });
         setFilledPositions(counts);
@@ -66,6 +75,7 @@ const DraftBoard = ({ seasonId }) => {
       const templatesRes = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/leagues/seasons/${seasonId}/roster-template`
       );
+      if (seq !== loadSeqRef.current) return;
       if (templatesRes.data.length > 0) {
         const template = {};
         templatesRes.data.forEach(t => { if (t.count > 0) template[t.position] = t.count; });
@@ -74,7 +84,9 @@ const DraftBoard = ({ seasonId }) => {
 
       setLoading(false);
     } catch (err) {
+      if (seq !== loadSeqRef.current) return;
       console.error('Error loading draft:', err);
+      setLoadError(true);
       setLoading(false);
     }
   }, [seasonId]);
@@ -85,16 +97,16 @@ const DraftBoard = ({ seasonId }) => {
     return () => clearInterval(interval);
   }, [loadDraft]);
 
-  const searchPlayers = async (query) => {
+  const searchPlayers = async (query, posFilter = positionFilter, activeOnlyFlag = activeOnly) => {
     setSearchQuery(query);
     if (query.length < 2) {
       setSearchResults([]);
       return;
     }
     try {
-      let url = `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/available?q=${encodeURIComponent(query)}&active_only=${activeOnly}`;
-      if (positionFilter) {
-        url += `&position=${positionFilter}`;
+      let url = `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/available?q=${encodeURIComponent(query)}&active_only=${activeOnlyFlag}`;
+      if (posFilter) {
+        url += `&position=${posFilter}`;
       }
       const response = await axios.get(url);
       setSearchResults(response.data);
@@ -154,6 +166,7 @@ const DraftBoard = ({ seasonId }) => {
     : DEFAULT_POSITIONS;
 
   const confirmPick = async () => {
+    if (submitting) return;
     if (!selectedPlayer) {
       showMessage('Select a player first');
       return;
@@ -162,20 +175,29 @@ const DraftBoard = ({ seasonId }) => {
       showMessage('Select a roster position first');
       return;
     }
+    setSubmitting(true);
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/pick`,
-        { player_id: selectedPlayer.id, position: selectedPosition }
+        {
+          player_id: selectedPlayer.id,
+          position: selectedPosition,
+          expected_pick_number: draftData.on_the_clock?.pick_number,
+        }
       );
       showMessage(`Pick #${response.data.pick.pick_number}: ${response.data.pick.player_name} (${response.data.pick.position})`);
       clearSelection();
       loadDraft();
     } catch (err) {
       showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const undoPick = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/draft/${draftData.draft.id}/undo`
@@ -184,6 +206,8 @@ const DraftBoard = ({ seasonId }) => {
       loadDraft();
     } catch (err) {
       showMessage(`Error: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -217,6 +241,15 @@ const DraftBoard = ({ seasonId }) => {
   };
 
   if (loading) return <div className="draft-loading">Loading draft...</div>;
+
+  if (loadError) {
+    return (
+      <div className="draft-board">
+        <h2>Draft</h2>
+        <p className="draft-empty">Couldn't load draft data. Check your connection and try refreshing.</p>
+      </div>
+    );
+  }
 
   if (!draftData?.draft) {
     return (
@@ -269,13 +302,25 @@ const DraftBoard = ({ seasonId }) => {
 
               <div className="search-filters">
                 <label className="active-only-toggle">
-                  <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={activeOnly}
+                    onChange={e => {
+                      const v = e.target.checked;
+                      setActiveOnly(v);
+                      if (searchQuery.length >= 2) searchPlayers(searchQuery, positionFilter, v);
+                    }}
+                  />
                   Active roster only
                 </label>
                 <select
                   className="position-filter"
                   value={positionFilter}
-                  onChange={e => { setPositionFilter(e.target.value); if (searchQuery.length >= 2) searchPlayers(searchQuery); }}
+                  onChange={e => {
+                    const v = e.target.value;
+                    setPositionFilter(v);
+                    if (searchQuery.length >= 2) searchPlayers(searchQuery, v);
+                  }}
                 >
                   <option value="">All positions</option>
                   <option value="2">C</option>
@@ -354,7 +399,7 @@ const DraftBoard = ({ seasonId }) => {
               <button
                 className="confirm-pick-btn"
                 onClick={confirmPick}
-                disabled={!selectedPlayer || !selectedPosition}
+                disabled={!selectedPlayer || !selectedPosition || submitting}
               >
                 {selectedPlayer && selectedPosition
                   ? `Draft ${selectedPlayer.name} as ${selectedPosition}`
