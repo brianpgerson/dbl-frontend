@@ -190,15 +190,13 @@ export default class Engine {
         break;
 
       case STATE.WHIFF:
-        if (this.stateTime > GAME.whiffDisplayDuration &&
-            (this.input.justReleased || this.stateTime > GAME.whiffDisplayDuration + 1.5)) {
+        if (this.stateTime > GAME.whiffDisplayDuration && this.input.justReleased) {
           this._nextSwing();
         }
         break;
 
       case STATE.RESULT:
-        if (this.stateTime > GAME.resultHoldDuration &&
-            (this.input.justReleased || this.stateTime > GAME.resultHoldDuration + 2)) {
+        if (this.stateTime > GAME.resultHoldDuration && this.input.justReleased) {
           this._nextSwing();
         }
         break;
