@@ -239,14 +239,18 @@ export default function BigDongos() {
               <tr><th>#</th><th>Manager</th><th>Best Dong</th><th>Stats</th></tr>
             </thead>
             <tbody>
-              {leaderboard.map((entry, i) => {
-                const allWhiff = entry.best_feet === 0 && entry.best_inches === 0;
+              {leaderboard.map(entry => {
+                const pending = !entry.played;
+                const allWhiff = !pending && entry.best_feet === 0 && entry.best_inches === 0;
                 return (
-                  <tr key={entry.user_id} className={i === 0 ? 'big-dongos-leader' : ''}>
-                    <td>{entry.rank}</td>
+                  <tr
+                    key={entry.user_id ?? entry.team_name}
+                    className={entry.rank === 1 ? 'big-dongos-leader' : pending ? 'big-dongos-pending' : ''}
+                  >
+                    <td>{pending ? '—' : entry.rank}</td>
                     <td>{entry.manager_name || entry.email}</td>
-                    <td>{allWhiff ? '0\' 0" 😢' : `${entry.best_feet}' ${entry.best_inches}"`}</td>
-                    <td>{allWhiff ? '—' : `${entry.exit_velocity?.toFixed(1)}mph, ${entry.launch_angle?.toFixed(1)}°`}</td>
+                    <td>{pending ? '?' : allWhiff ? '0\' 0" 😢' : `${entry.best_feet}' ${entry.best_inches}"`}</td>
+                    <td>{pending || allWhiff ? '—' : `${entry.exit_velocity?.toFixed(1)}mph, ${entry.launch_angle?.toFixed(1)}°`}</td>
                   </tr>
                 );
               })}
