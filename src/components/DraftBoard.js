@@ -541,35 +541,33 @@ const DraftBoard = ({ seasonId }) => {
               </tr>
             </thead>
             <tbody>
-              {rosterPositionKeys.map(pos => (
-                <tr key={pos}>
-                  <td className="round-number">{pos}</td>
-                  {order.map(team => {
-                    const posPicks = picksByTeamByPosition[team.team_id]?.[pos] || [];
-                    const slots = rosterTemplate[pos] || 1;
-                    const filled = posPicks.length >= slots;
-                    return (
-                      <td
-                        key={team.team_id}
-                        className={`pick-cell ${posPicks.length > 0 ? 'picked' : 'pending'}`}
-                      >
-                        {posPicks.length > 0 ? (
-                          <div className="pick-info">
-                            {posPicks.map(p => (
-                              <div key={p.pick_number} className="pick-player">
-                                {p.player_name?.split(' ').pop()}
-                              </div>
-                            ))}
-                            {!filled && <div className="pick-position">{posPicks.length}/{slots}</div>}
-                          </div>
-                        ) : (
-                          <div className="pick-empty">—</div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+              {rosterPositionKeys.flatMap(pos => {
+                const slots = rosterTemplate[pos] || 1;
+                return Array.from({ length: slots }, (_, slotIdx) => (
+                  <tr key={`${pos}-${slotIdx}`}>
+                    <td className="round-number">{pos}{slots > 1 ? slotIdx + 1 : ''}</td>
+                    {order.map(team => {
+                      const posPicks = picksByTeamByPosition[team.team_id]?.[pos] || [];
+                      const pick = posPicks[slotIdx];
+                      return (
+                        <td
+                          key={team.team_id}
+                          className={`pick-cell ${pick ? 'picked' : 'pending'}`}
+                        >
+                          {pick ? (
+                            <div className="pick-info">
+                              <div className="pick-player">{pick.player_name?.split(' ').pop()}</div>
+                              <div className="pick-position">R{pick.round}</div>
+                            </div>
+                          ) : (
+                            <div className="pick-empty">—</div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ));
+              })}
             </tbody>
           </table>
         </div>
