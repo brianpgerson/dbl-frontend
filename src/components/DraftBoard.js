@@ -36,6 +36,8 @@ const DraftBoard = ({ seasonId }) => {
   const [positionFilter, setPositionFilter] = useState('');
   const [filledPositions, setFilledPositions] = useState({}); // { 'C': 1, 'LF': 1, ... }
   const [rosterTemplate, setRosterTemplate] = useState({}); // { 'C': 1, 'BEN': 2, ... }
+  const [viewMode, setViewMode] = useState('rounds'); // 'rounds' | 'positions' | 'roster'
+  const [rosterViewTeamId, setRosterViewTeamId] = useState(null);
 
   const [loadError, setLoadError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -269,6 +271,20 @@ const DraftBoard = ({ seasonId }) => {
     picksByRound[pick.round].push(pick);
   });
 
+  // { [teamId]: { [position]: [pick, pick, ...] } } — for position view + roster view
+  const picksByTeamByPosition = {};
+  picks.forEach(pick => {
+    if (!pick.player_id) return;
+    if (!picksByTeamByPosition[pick.team_id]) picksByTeamByPosition[pick.team_id] = {};
+    const tp = picksByTeamByPosition[pick.team_id];
+    if (!tp[pick.position]) tp[pick.position] = [];
+    tp[pick.position].push(pick);
+  });
+
+  // Default the roster-view team: user's own team in this draft → on-the-clock → first team
+  const myTeamId = user?.teamIds?.find(tid => order.some(o => o.team_id === tid));
+  const effectiveRosterTeamId = rosterViewTeamId ?? myTeamId ?? on_the_clock?.team_id ?? order[0]?.team_id;
+
   const picksMade = picks.filter(p => p.player_id).length;
 
   return (
@@ -439,52 +455,164 @@ const DraftBoard = ({ seasonId }) => {
         </div>
       )}
 
-      {/* Draft board grid */}
-      <div className="draft-grid">
-        <table>
-          <thead>
-            <tr>
-              <th>Rd</th>
-              {order.map(team => (
-                <th key={team.team_id} className="team-header">
-                  <div className="team-header-name">{team.manager_name}</div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(picksByRound).map(([round, roundPicks]) => (
-              <tr key={round}>
-                <td className="round-number">{round}</td>
-                {order.map(team => {
-                  const pick = roundPicks.find(p => p.team_id === team.team_id);
-                  if (!pick) return <td key={team.team_id} className="pick-cell pending"><div className="pick-empty">—</div></td>;
-                  return (
-                    <td
-                      key={pick.pick_number}
-                      className={`pick-cell ${pick.player_id ? 'picked' : 'pending'} ${
-                        on_the_clock?.pick_number === pick.pick_number ? 'on-clock' : ''
-                      } ${editingPick?.pick_number === pick.pick_number ? 'editing' : ''} ${
-                        isCommissioner && pick.player_id ? 'editable' : ''
-                      }`}
-                      onClick={() => handlePickCellClick(pick)}
-                    >
-                      {pick.player_id ? (
-                        <div className="pick-info">
-                          <div className="pick-player">{pick.player_name?.split(' ').pop()}</div>
-                          <div className="pick-position">{pick.position}</div>
-                        </div>
-                      ) : (
-                        <div className="pick-empty">—</div>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* View toggle */}
+      <div className="draft-view-toggle">
+        <button
+          className={viewMode === 'rounds' ? 'active' : ''}
+          onClick={() => setViewMode('rounds')}
+        >
+          By Round
+        </button>
+        <button
+          className={viewMode === 'positions' ? 'active' : ''}
+          onClick={() => setViewMode('positions')}
+        >
+          By Position
+        </button>
+        <button
+          className={viewMode === 'roster' ? 'active' : ''}
+          onClick={() => setViewMode('roster')}
+        >
+          Team Roster
+        </button>
       </div>
+
+      {/* By Round — original grid */}
+      {viewMode === 'rounds' && (
+        <div className="draft-grid">
+          <table>
+            <thead>
+              <tr>
+                <th>Rd</th>
+                {order.map(team => (
+                  <th key={team.team_id} className="team-header">
+                    <div className="team-header-name">{team.manager_name}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(picksByRound).map(([round, roundPicks]) => (
+                <tr key={round}>
+                  <td className="round-number">{round}</td>
+                  {order.map(team => {
+                    const pick = roundPicks.find(p => p.team_id === team.team_id);
+                    if (!pick) return <td key={team.team_id} className="pick-cell pending"><div className="pick-empty">—</div></td>;
+                    return (
+                      <td
+                        key={pick.pick_number}
+                        className={`pick-cell ${pick.player_id ? 'picked' : 'pending'} ${
+                          on_the_clock?.pick_number === pick.pick_number ? 'on-clock' : ''
+                        } ${editingPick?.pick_number === pick.pick_number ? 'editing' : ''} ${
+                          isCommissioner && pick.player_id ? 'editable' : ''
+                        }`}
+                        onClick={() => handlePickCellClick(pick)}
+                      >
+                        {pick.player_id ? (
+                          <div className="pick-info">
+                            <div className="pick-player">{pick.player_name?.split(' ').pop()}</div>
+                            <div className="pick-position">{pick.position}</div>
+                          </div>
+                        ) : (
+                          <div className="pick-empty">—</div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* By Position — positions as rows, teams as columns */}
+      {viewMode === 'positions' && (
+        <div className="draft-grid">
+          <table>
+            <thead>
+              <tr>
+                <th>Pos</th>
+                {order.map(team => (
+                  <th key={team.team_id} className="team-header">
+                    <div className="team-header-name">{team.manager_name}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rosterPositionKeys.map(pos => (
+                <tr key={pos}>
+                  <td className="round-number">{pos}</td>
+                  {order.map(team => {
+                    const posPicks = picksByTeamByPosition[team.team_id]?.[pos] || [];
+                    const slots = rosterTemplate[pos] || 1;
+                    const filled = posPicks.length >= slots;
+                    return (
+                      <td
+                        key={team.team_id}
+                        className={`pick-cell ${posPicks.length > 0 ? 'picked' : 'pending'}`}
+                      >
+                        {posPicks.length > 0 ? (
+                          <div className="pick-info">
+                            {posPicks.map(p => (
+                              <div key={p.pick_number} className="pick-player">
+                                {p.player_name?.split(' ').pop()}
+                              </div>
+                            ))}
+                            {!filled && <div className="pick-position">{posPicks.length}/{slots}</div>}
+                          </div>
+                        ) : (
+                          <div className="pick-empty">—</div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Team Roster — single-team list with dropdown */}
+      {viewMode === 'roster' && (
+        <div className="roster-view">
+          <div className="roster-team-select">
+            <label>Team:</label>
+            <select
+              value={effectiveRosterTeamId || ''}
+              onChange={e => setRosterViewTeamId(parseInt(e.target.value, 10))}
+            >
+              {order.map(team => (
+                <option key={team.team_id} value={team.team_id}>
+                  {team.manager_name} — {team.team_name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <table className="roster-table">
+            <tbody>
+              {rosterPositionKeys.map(pos => {
+                const posPicks = picksByTeamByPosition[effectiveRosterTeamId]?.[pos] || [];
+                const slots = rosterTemplate[pos] || 1;
+                return Array.from({ length: slots }, (_, i) => {
+                  const pick = posPicks[i];
+                  return (
+                    <tr key={`${pos}-${i}`} className={pick ? 'roster-filled' : 'roster-empty'}>
+                      <td className="roster-pos">{pos}{slots > 1 ? ` ${i + 1}` : ''}</td>
+                      <td className="roster-player">
+                        {pick ? pick.player_name : <span className="roster-gap">—</span>}
+                      </td>
+                      {pick && <td className="roster-round">R{pick.round}</td>}
+                    </tr>
+                  );
+                });
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

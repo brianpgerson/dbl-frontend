@@ -447,6 +447,102 @@
   text-align: center;
 }
 
+/* View toggle */
+.draft-view-toggle {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0;
+  justify-content: center;
+}
+
+.draft-view-toggle button {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.5rem;
+  padding: 8px 12px;
+  background: rgba(25, 184, 255, 0.1);
+  border: 1px solid rgba(25, 184, 255, 0.3);
+  color: #19b8ff;
+  cursor: pointer;
+}
+
+.draft-view-toggle button.active {
+  background: rgba(25, 184, 255, 0.3);
+  border-color: #19b8ff;
+  color: #fff;
+}
+
+.draft-view-toggle button:hover:not(.active) {
+  background: rgba(25, 184, 255, 0.2);
+}
+
+/* Roster view */
+.roster-view {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.roster-team-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.roster-team-select label {
+  color: #19b8ff;
+  font-size: 0.6rem;
+}
+
+.roster-team-select select {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  padding: 6px 10px;
+  background: #111;
+  border: 1px solid #19b8ff;
+  color: #fff;
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.roster-table tr {
+  border-bottom: 1px solid #222;
+}
+
+.roster-table td {
+  padding: 10px 8px;
+  text-align: left;
+}
+
+.roster-pos {
+  color: #19b8ff;
+  font-size: 0.6rem;
+  width: 60px;
+}
+
+.roster-player {
+  color: #fff;
+  font-size: 0.6rem;
+}
+
+.roster-empty .roster-player {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.roster-gap {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.roster-round {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.45rem;
+  text-align: right;
+  width: 40px;
+}
+
 /* Draft grid */
 .draft-grid {
   overflow-x: auto;
