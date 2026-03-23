@@ -5,6 +5,14 @@ import './DraftBoard.css';
 
 const DEFAULT_POSITIONS = ['C', '1B', '2B', 'SS', '3B', 'LF', 'CF', 'RF', 'DH', 'BEN'];
 
+// "Vladimir Guerrero Jr." → "V. Guerrero Jr."
+const shortName = (name) => {
+  if (!name) return '';
+  const parts = name.split(' ');
+  if (parts.length === 1) return name;
+  return `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
+};
+
 // Map MLB primary position codes to our roster positions
 // MLB API returns numeric codes: 2=C, 3=1B, 4=2B, 5=3B, 6=SS, 7=LF, 8=CF, 9=RF, 10=DH
 const MLB_POSITION_MAP = {
@@ -510,7 +518,7 @@ const DraftBoard = ({ seasonId }) => {
                       >
                         {pick.player_id ? (
                           <div className="pick-info">
-                            <div className="pick-player">{pick.player_name?.split(' ').pop()}</div>
+                            <div className="pick-player">{shortName(pick.player_name)}</div>
                             <div className="pick-position">{pick.position}</div>
                           </div>
                         ) : (
@@ -556,7 +564,7 @@ const DraftBoard = ({ seasonId }) => {
                         >
                           {pick ? (
                             <div className="pick-info">
-                              <div className="pick-player">{pick.player_name?.split(' ').pop()}</div>
+                              <div className="pick-player">{shortName(pick.player_name)}</div>
                               <div className="pick-position">R{pick.round}</div>
                             </div>
                           ) : (
