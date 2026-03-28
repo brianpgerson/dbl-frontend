@@ -9,7 +9,11 @@ const TEAM_COLORS = [
   '#ff3333', // Red
   '#3333ff', // Blue
   '#ff8800', // Orange
-  '#ffffff'  // White
+  '#ffffff', // White
+  '#9d00ff', // Violet
+  '#00ff88', // Spring green
+  '#ff1493', // Deep pink
+  '#88ff00'  // Lime
 ];
 
 export function useLineChartData(raceData, teams, timeInterval, showFromZero) {
