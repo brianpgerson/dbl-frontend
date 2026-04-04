@@ -40,25 +40,25 @@ export default function BadgeBoard({ teamId, seasonId }) {
     <div className="badge-board">
       <div className="badge-board-header">
         <h3>Badges</h3>
-        {!loading && <span className="badge-board-count">{earnedCount}/{BADGES.length}</span>}
+        {!loading && <span className="badge-board-count">{earnedCount}</span>}
       </div>
+      {earnedCount === 0 && !loading && (
+        <p className="badge-board-empty">No badges yet — go hit some dingers.</p>
+      )}
       {TIER_ORDER.map(tier => {
-        const tierBadges = BADGES.filter(b => b.tier === tier);
+        const tierBadges = BADGES.filter(b => b.tier === tier && earned[b.key]);
+        if (tierBadges.length === 0) return null;
         return (
           <div key={tier} className="badge-board-tier">
             <div className={`badge-board-tier-label tier-${tier}`}>{tier}</div>
             <div className="badge-board-grid">
-              {tierBadges.map(b => {
-                const e = earned[b.key];
-                return (
-                  <PixelBadge
-                    key={b.key}
-                    badgeKey={b.key}
-                    locked={!e}
-                    context={e?.context}
-                  />
-                );
-              })}
+              {tierBadges.map(b => (
+                <PixelBadge
+                  key={b.key}
+                  badgeKey={b.key}
+                  context={earned[b.key].context}
+                />
+              ))}
             </div>
           </div>
         );

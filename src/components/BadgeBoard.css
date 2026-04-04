@@ -22,6 +22,15 @@
   margin: 0;
 }
 
+.badge-board-empty {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  padding: 20px 0;
+  margin: 0;
+}
+
 .badge-board-count {
   font-family: 'Press Start 2P', monospace;
   color: #19b8ff;
