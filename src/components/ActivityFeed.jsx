@@ -39,20 +39,19 @@ function BadgeEvent({ e }) {
   return (
     <>
       <span className="feed-team">{e.manager_name}</span>
+      <span className="feed-verb">earned a badge!</span>
       <BadgeInline badgeKey={e.payload.badge_key} context={e.payload.context} />
-      <span className="feed-badge-tag">earned</span>
     </>
   );
 }
 
 function TitleChangeEvent({ e }) {
+  const verb = e.payload.prev_team_id ? 'took a title!' : 'claimed a title!';
   return (
     <>
       <span className="feed-team">{e.manager_name}</span>
+      <span className="feed-verb">{verb}</span>
       <BadgeInline badgeKey={e.payload.badge_key} context={e.payload.context} />
-      <span className="feed-badge-tag">
-        {e.payload.prev_team_id ? 'taken' : 'claimed'}
-      </span>
     </>
   );
 }
