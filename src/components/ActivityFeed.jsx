@@ -1,12 +1,25 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { PixelSprite } from '../badges/PixelBadge';
+import { PixelSprite, formatContext } from '../badges/PixelBadge';
 import { byKey } from '../badges/definitions';
 import './ActivityFeed.css';
 
 function fmtDate(d) {
   const dt = new Date(d);
   return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function BadgeInline({ badgeKey, context }) {
+  const def = byKey[badgeKey];
+  if (!def) return <span className="feed-badge-content">{badgeKey}</span>;
+  const ctxLine = formatContext(def, context);
+  const hover = ctxLine ? `${def.desc} — ${ctxLine}` : def.desc;
+  return (
+    <span className="feed-badge-content" title={hover}>
+      <PixelSprite sprite={def.sprite} size={16} />
+      <span className={`feed-badge-name tier-${def.tier}`}>{def.name}</span>
+    </span>
+  );
 }
 
 function HrEvent({ e }) {
@@ -23,24 +36,20 @@ function HrEvent({ e }) {
 }
 
 function BadgeEvent({ e }) {
-  const def = byKey[e.payload.badge_key];
   return (
     <>
       <span className="feed-team">{e.manager_name}</span>
-      {def && <PixelSprite sprite={def.sprite} size={20} />}
-      <span className={`feed-badge-name tier-${def?.tier || 'common'}`}>{e.payload.badge_name}</span>
+      <BadgeInline badgeKey={e.payload.badge_key} context={e.payload.context} />
       <span className="feed-badge-tag">earned</span>
     </>
   );
 }
 
 function TitleChangeEvent({ e }) {
-  const def = byKey[e.payload.badge_key];
   return (
     <>
       <span className="feed-team">{e.manager_name}</span>
-      {def && <PixelSprite sprite={def.sprite} size={20} />}
-      <span className={`feed-badge-name tier-${def?.tier || 'common'}`}>{e.payload.badge_name}</span>
+      <BadgeInline badgeKey={e.payload.badge_key} context={e.payload.context} />
       <span className="feed-badge-tag">
         {e.payload.prev_team_id ? 'taken' : 'claimed'}
       </span>

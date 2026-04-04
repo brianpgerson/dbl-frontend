@@ -74,8 +74,16 @@
   font-size: 7px;
 }
 
-.feed-badge .pixel-sprite,
-.feed-title_change .pixel-sprite {
+.feed-badge-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: help;
+}
+
+.feed-badge-content .pixel-sprite {
+  display: inline-block;
+  margin: 0;
   flex-shrink: 0;
 }
 

@@ -47,7 +47,7 @@ export default function PixelBadge({ badgeKey, locked = false, context, size = 5
   );
 }
 
-function formatContext(def, ctx) {
+export function formatContext(def, ctx) {
   if (!ctx) return null;
   if (ctx.player_name && ctx.hrs != null) return `${ctx.player_name} — ${ctx.hrs} HR`;
   if (ctx.player_name) return ctx.player_name;
