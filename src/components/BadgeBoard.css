@@ -1,0 +1,60 @@
+.badge-board {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(25, 184, 255, 0.15);
+  border-radius: 6px;
+}
+
+.badge-board-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.badge-board-header h3 {
+  font-family: 'Press Start 2P', monospace;
+  color: #ff2998;
+  font-size: 14px;
+  text-shadow: 0 0 10px #ff2998;
+  margin: 0;
+}
+
+.badge-board-count {
+  font-family: 'Press Start 2P', monospace;
+  color: #19b8ff;
+  font-size: 10px;
+}
+
+.badge-board-tier {
+  margin-bottom: 20px;
+}
+
+.badge-board-tier-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.badge-board-tier-label.tier-legend { color: #ffff00; }
+.badge-board-tier-label.tier-rare   { color: #ff00ff; }
+.badge-board-tier-label.tier-common { color: #19b8ff; }
+.badge-board-tier-label.tier-shame  { color: #ff3333; }
+
+.badge-board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 600px) {
+  .badge-board-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+  }
+}

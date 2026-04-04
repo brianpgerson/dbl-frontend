@@ -7,6 +7,7 @@ import './App.css';
 import TeamSelector from './components/TeamSelector';
 import TeamRoster from './components/TeamRoster';
 import HomeRunVideos from './components/HomeRunVideos';
+import ActivityFeed from './components/ActivityFeed';
 import UserIcon from './components/UserIcon';
 import LeagueHistory from './components/LeagueHistory';
 import AdminPortal from './components/AdminPortal';
@@ -188,6 +189,7 @@ function AppContent() {
             showFromZero={showFromZero} setShowFromZero={setShowFromZero}
             isMobile={isMobile}
           />
+          <ActivityFeed seasonId={statusData?.season?.id} />
           <HomeRunVideos />
         </>
       )}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import PlayerSwapModal from './PlayerSwapModal';
+import BadgeBoard from './BadgeBoard';
 import './TeamRoster.css';
 
 const TeamRoster = ({ team }) => {
@@ -176,6 +177,10 @@ const TeamRoster = ({ team }) => {
         </table>
       </div>
       
+      {team.season_id && (
+        <BadgeBoard teamId={team.id} seasonId={team.season_id} />
+      )}
+
       {showMoveModal && selectedPlayer && (
         <PlayerSwapModal
           team={team}
