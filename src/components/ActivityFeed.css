@@ -70,6 +70,10 @@
 .feed-verb {
   color: rgba(255, 255, 255, 0.5);
 }
+.feed-from {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 7px;
+}
 .feed-badge-name { color: #fff; }
 .feed-badge-name.tier-legend { color: #ffff00; text-shadow: 0 0 6px #ffff00; }
 .feed-badge-name.tier-rare   { color: #ff00ff; }

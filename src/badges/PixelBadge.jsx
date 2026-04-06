@@ -49,12 +49,17 @@ export default function PixelBadge({ badgeKey, locked = false, context, size = 5
 
 export function formatContext(def, ctx) {
   if (!ctx) return null;
+  if (ctx.player_name && ctx.streak != null) return `${ctx.player_name} — ${ctx.streak} straight`;
+  if (ctx.player_name && ctx.bench_hrs != null) return `${ctx.player_name} — ${ctx.bench_hrs} bench HR`;
   if (ctx.player_name && ctx.hrs != null) return `${ctx.player_name} — ${ctx.hrs} HR`;
   if (ctx.player_name) return ctx.player_name;
+  if (ctx.from != null && ctx.to != null) return `rank ${ctx.from} → ${ctx.to}`;
+  if (ctx.rank != null) return `now rank ${ctx.rank}`;
   if (ctx.total != null) return `${ctx.total} HRs`;
   if (ctx.count != null) return `${ctx.count} in one day`;
   if (ctx.streak != null) return `${ctx.streak}-day streak`;
   if (ctx.gap != null) return `+${ctx.gap} lead`;
+  if (ctx.positions != null) return `all ${ctx.positions} positions`;
   if (ctx.hrs != null) return `${ctx.hrs} HRs`;
   if (ctx.deficit != null) return `${ctx.deficit} back`;
   return null;

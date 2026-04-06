@@ -5,7 +5,9 @@ import { byKey } from '../badges/definitions';
 import './ActivityFeed.css';
 
 function fmtDate(d) {
-  const dt = new Date(d);
+  // event_date is a DATE — parse as local noon to avoid UTC-midnight → previous-day in US TZs
+  const [y, m, day] = String(d).split('T')[0].split('-').map(Number);
+  const dt = new Date(y, m - 1, day);
   return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
@@ -46,12 +48,35 @@ function BadgeEvent({ e }) {
 }
 
 function TitleChangeEvent({ e }) {
-  const verb = e.payload.prev_team_id ? 'took a title!' : 'claimed a title!';
+  const p = e.payload;
+  if (p.kind === 'loss') {
+    return (
+      <>
+        <span className="feed-team">{e.manager_name}</span>
+        <span className="feed-verb">lost a title</span>
+        <BadgeInline badgeKey={p.badge_key} context={p.context} />
+      </>
+    );
+  }
+  const verb = p.prev_manager_name ? 'took a title!' : 'claimed a title!';
   return (
     <>
       <span className="feed-team">{e.manager_name}</span>
       <span className="feed-verb">{verb}</span>
-      <BadgeInline badgeKey={e.payload.badge_key} context={e.payload.context} />
+      <BadgeInline badgeKey={p.badge_key} context={p.context} />
+      {p.prev_manager_name && (
+        <span className="feed-from">from {p.prev_manager_name}</span>
+      )}
+    </>
+  );
+}
+
+function RosterMoveEvent({ e }) {
+  const p = e.payload.player;
+  return (
+    <>
+      <span className="feed-team">{e.manager_name}</span>
+      <span className="feed-swap">{p.name} {p.from}→{p.to}</span>
     </>
   );
 }
@@ -73,6 +98,7 @@ const RENDERERS = {
   badge: BadgeEvent,
   title_change: TitleChangeEvent,
   roster_swap: RosterSwapEvent,
+  roster_move: RosterMoveEvent,
 };
 
 export default function ActivityFeed({ seasonId }) {
@@ -80,15 +106,18 @@ export default function ActivityFeed({ seasonId }) {
   const [cursor, setCursor] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async (beforeId) => {
+  const load = useCallback(async (cur) => {
     if (!seasonId) return;
     try {
       const params = new URLSearchParams({ limit: '50' });
-      if (beforeId) params.set('before_id', beforeId);
+      if (cur) {
+        params.set('before_date', String(cur.event_date).split('T')[0]);
+        params.set('before_id', cur.id);
+      }
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/feed/${seasonId}?${params}`
       );
-      setEvents(prev => beforeId ? [...prev, ...res.data.events] : res.data.events);
+      setEvents(prev => cur ? [...prev, ...res.data.events] : res.data.events);
       setCursor(res.data.next_cursor);
       setLoading(false);
     } catch (err) {
