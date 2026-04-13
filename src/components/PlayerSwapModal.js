@@ -75,22 +75,22 @@ const PlayerSwapModal = ({ team, roster, selectedPlayer, onClose, onSuccess }) =
     return `${formattedName} (${player.position})${statusBadge}`;
   };
 
-  // Get valid destination players for the selected player
+  // Get valid destination players for the selected player.
+  // Players whose game has started are still shown — the backend applies the swap
+  // effective tomorrow in that case and says so in the response message.
   const getValidDestinations = () => {
     if (!selectedPlayer) return [];
 
     // If selected player is currently starting
     if (selectedPlayer.position !== 'BEN') {
-      return roster.filter(player => 
-        (player.position === 'BEN') &&  (player.player_id !== selectedPlayer.player_id) && 
-        (['BEN', selectedPlayer.position].includes(player.drafted_position)) &&
-        (player.game_status !== 'live' && player.game_status !== 'final')
+      return roster.filter(player =>
+        (player.position === 'BEN') && (player.player_id !== selectedPlayer.player_id) &&
+        (['BEN', selectedPlayer.position].includes(player.drafted_position))
       );
     } else {
       // Selected player is on bench - can move to starting positions
-      return roster.filter(player => (player.position !== 'BEN') && 
+      return roster.filter(player => (player.position !== 'BEN') &&
         (player.player_id !== selectedPlayer.player_id) &&
-        (player.game_status !== 'live' && player.game_status !== 'final') &&
         (selectedPlayer.drafted_position === 'BEN' || selectedPlayer.drafted_position === player.position)
       );
     }
