@@ -77,7 +77,9 @@
 .feed-badge-name { color: #fff; }
 .feed-badge-name.tier-legend { color: #ffff00; text-shadow: 0 0 6px #ffff00; }
 .feed-badge-name.tier-rare   { color: #ff00ff; }
-.feed-badge-name.tier-shame  { color: #ff3333; }
+.feed-badge-name.tier-shame   { color: #ff3333; }
+.feed-badge-name.tier-special { color: #39ff14; }
+.feed-bonus-icon { font-size: 12px; }
 
 .feed-swap {
   color: rgba(255, 255, 255, 0.6);

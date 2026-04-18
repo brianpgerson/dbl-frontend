@@ -6,6 +6,7 @@ import './BadgeBoard.css';
 
 export default function BadgeBoard({ teamId, seasonId }) {
   const [earned, setEarned] = useState({}); // { badge_key: {context, awarded_date?} }
+  const [customBadges, setCustomBadges] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function BadgeBoard({ teamId, seasonId }) {
           map[t.badge_key] = { context: t.context };
         });
         setEarned(map);
+        setCustomBadges(res.data.custom_badges || []);
         setLoading(false);
       })
       .catch(err => {
@@ -34,7 +36,7 @@ export default function BadgeBoard({ teamId, seasonId }) {
       });
   }, [teamId, seasonId]);
 
-  const earnedCount = Object.keys(earned).length;
+  const earnedCount = Object.keys(earned).length + customBadges.length;
 
   return (
     <div className="badge-board">
@@ -63,6 +65,22 @@ export default function BadgeBoard({ teamId, seasonId }) {
           </div>
         );
       })}
+      {customBadges.length > 0 && (
+        <div className="badge-board-tier">
+          <div className="badge-board-tier-label tier-special">special</div>
+          <div className="badge-board-grid">
+            {customBadges.map(b => (
+              <div key={b.id} className="custom-badge-card" title={b.description || ''}>
+                {b.image_data
+                  ? <img src={b.image_data} alt={b.name} className="custom-badge-image" />
+                  : <div className="custom-badge-fallback">📸</div>}
+                <div className="custom-badge-name">{b.name}</div>
+                {b.description && <div className="custom-badge-desc">{b.description}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

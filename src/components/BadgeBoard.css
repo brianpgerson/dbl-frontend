@@ -50,10 +50,46 @@
   text-align: left;
 }
 
-.badge-board-tier-label.tier-legend { color: #ffff00; }
-.badge-board-tier-label.tier-rare   { color: #ff00ff; }
-.badge-board-tier-label.tier-common { color: #19b8ff; }
-.badge-board-tier-label.tier-shame  { color: #ff3333; }
+.badge-board-tier-label.tier-legend  { color: #ffff00; }
+.badge-board-tier-label.tier-rare    { color: #ff00ff; }
+.badge-board-tier-label.tier-common  { color: #19b8ff; }
+.badge-board-tier-label.tier-shame   { color: #ff3333; }
+.badge-board-tier-label.tier-special { color: #39ff14; }
+
+.custom-badge-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px solid #39ff14;
+  border-radius: 8px;
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: 0 0 14px -2px #39ff14, inset 0 0 18px -12px #39ff14;
+}
+.custom-badge-image {
+  width: 100%;
+  max-width: 110px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto 8px;
+}
+.custom-badge-fallback {
+  font-size: 42px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.custom-badge-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #fff;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+.custom-badge-desc {
+  font-size: 6px;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.5;
+}
 
 .badge-board-grid {
   display: grid;

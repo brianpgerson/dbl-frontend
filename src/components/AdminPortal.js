@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import BonusAdmin from './BonusAdmin';
 import './AdminPortal.css';
 
 const AdminPortal = () => {
@@ -459,6 +460,8 @@ const AdminPortal = () => {
           </div>
 
           <p className="admin-hint">Roster swaps can be made from any team's roster page using the commissioner effective date override.</p>
+
+          <BonusAdmin seasonId={activeLeague?.id} onMessage={showMessage} />
         </div>
       )}
     </div>

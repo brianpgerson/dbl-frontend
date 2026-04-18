@@ -93,12 +93,30 @@ function RosterSwapEvent({ e }) {
   );
 }
 
+function BonusEvent({ e }) {
+  const p = e.payload;
+  return (
+    <>
+      <span className="feed-team">{e.manager_name}</span>
+      <span className="feed-verb">got +{p.hrs} bonus HRs!</span>
+      {p.custom_badge_name && (
+        <span className="feed-badge-content" title={p.reason || ''}>
+          <span className="feed-bonus-icon">📸</span>
+          <span className="feed-badge-name tier-special">{p.custom_badge_name}</span>
+        </span>
+      )}
+      {!p.custom_badge_name && p.reason && <span className="feed-from">{p.reason}</span>}
+    </>
+  );
+}
+
 const RENDERERS = {
   hr: HrEvent,
   badge: BadgeEvent,
   title_change: TitleChangeEvent,
   roster_swap: RosterSwapEvent,
   roster_move: RosterMoveEvent,
+  bonus: BonusEvent,
 };
 
 export default function ActivityFeed({ seasonId }) {
