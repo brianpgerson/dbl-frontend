@@ -8,6 +8,7 @@ import './TeamRoster.css';
 const TeamRoster = ({ team }) => {
   const { canManageTeam } = useAuth();
   const [roster, setRoster] = useState([]);
+  const [bonusHrs, setBonusHrs] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
@@ -29,9 +30,13 @@ const TeamRoster = ({ team }) => {
   
   useEffect(() => {
     setLoading(true);
-    axios.get(`${process.env.REACT_APP_API_URL}/api/team/${team.id}/roster-with-hrs`)
-      .then(response => {
-        setRoster(response.data);
+    Promise.all([
+      axios.get(`${process.env.REACT_APP_API_URL}/api/team/${team.id}/roster-with-hrs`),
+      axios.get(`${process.env.REACT_APP_API_URL}/api/team/${team.id}/bonus-total`),
+    ])
+      .then(([rosterRes, bonusRes]) => {
+        setRoster(rosterRes.data);
+        setBonusHrs(bonusRes.data.bonus_hrs || 0);
         setLoading(false);
         setError(null);
       })
@@ -132,7 +137,10 @@ const TeamRoster = ({ team }) => {
         <div className="team-info">
           <h3>{team.name}</h3>
           <div className="team-roster-manager">Manager: {team.manager_name}</div>
-          <div className="team-total-hrs">Total Dongs: <span className="hrs-count">{totalHomeRuns}</span></div>
+          <div className="team-total-hrs">
+            Total Dongs: <span className="hrs-count">{totalHomeRuns + bonusHrs}</span>
+            {bonusHrs > 0 && <span className="bonus-hrs"> (incl. +{bonusHrs} bonus)</span>}
+          </div>
         </div>
       </div>
       
