@@ -3,7 +3,6 @@ import axios from 'axios';
 import './HrLeaders.css';
 
 const POSITIONS = ['ALL', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
-const TOP_N = 15;
 
 export default function HrLeaders() {
   const [data, setData] = useState(null);
