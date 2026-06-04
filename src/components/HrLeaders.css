@@ -1,6 +1,6 @@
 .hr-leaders {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(25, 184, 255, 0.2);
+  background: #000;
+  border: 1px solid #19b8ff;
   border-radius: 4px;
   padding: 20px;
   margin: 0 auto 30px;
@@ -13,6 +13,8 @@
   font-size: 12px;
   margin: 0 0 16px;
   text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
   text-shadow: 0 0 10px rgba(255, 41, 152, 0.4);
 }
 
