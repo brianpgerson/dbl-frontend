@@ -13,6 +13,7 @@ import LeagueHistory from './components/LeagueHistory';
 import AdminPortal from './components/AdminPortal';
 import DraftBoard from './components/DraftBoard';
 import BigDongos from './components/BigDongos';
+import HrLeaders from './components/HrLeaders';
 import { useAuth } from './contexts/AuthContext';
 import { useLineChartData, useBarChartData } from './hooks/useChartData';
 import { useIsMobile } from './hooks/useWindowWidth';
@@ -189,6 +190,7 @@ function AppContent() {
             showFromZero={showFromZero} setShowFromZero={setShowFromZero}
             isMobile={isMobile}
           />
+          <HrLeaders />
           <ActivityFeed seasonId={statusData?.season?.id} />
           <HomeRunVideos />
         </>
