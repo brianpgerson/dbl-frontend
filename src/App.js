@@ -14,6 +14,7 @@ import AdminPortal from './components/AdminPortal';
 import DraftBoard from './components/DraftBoard';
 import BigDongos from './components/BigDongos';
 import HrLeaders from './components/HrLeaders';
+import Notice from './components/Notice';
 import { useAuth } from './contexts/AuthContext';
 import { useLineChartData, useBarChartData } from './hooks/useChartData';
 import { useIsMobile } from './hooks/useWindowWidth';
@@ -289,8 +290,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AppContent />} />
-        <Route path="/team/:teamId" element={<AppContent />} />
+        <Route path="/" element={<><AppContent /><Notice /></>} />
+        <Route path="/team/:teamId" element={<><AppContent /><Notice /></>} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/big-dongos" element={<BigDongosPage />} />

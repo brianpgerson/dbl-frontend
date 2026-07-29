@@ -1,0 +1,46 @@
+.notice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(0, 0, 0, 0.93);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: notice-fade-in 0.25s ease-out;
+}
+
+.notice-image {
+  max-width: 92vw;
+  max-height: 76vh;
+  object-fit: contain;
+  border: 2px solid #ff2998;
+  box-shadow: 0 0 30px rgba(255, 41, 152, 0.5);
+}
+
+.notice-caption {
+  margin: 22px 0 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #39ff14;
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
+  text-align: center;
+}
+
+@keyframes notice-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 600px) {
+  .notice-image {
+    max-height: 70vh;
+  }
+
+  .notice-caption {
+    font-size: 10px;
+    padding: 0 8px;
+  }
+}
