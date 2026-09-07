@@ -192,7 +192,7 @@ function AppContent() {
             isMobile={isMobile}
           />
           <HrLeaders />
-          <ActivityFeed seasonId={statusData?.season?.id} />
+          <ActivityFeed seasonId={statusData?.season?.id} teams={teams} />
           <HomeRunVideos />
         </>
       )}
